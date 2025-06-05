@@ -5616,16 +5616,12 @@ export default function luckysheetHandler() {
 
     //菜单栏 导出按钮
     $("#luckysheet-exportXlsx-btn-title").click(function() {
-
-        const exportXlsxInfo =  Store.plugins.find(plugin => plugin.name === 'exportXlsx')
-        if(exportXlsxInfo){
-            const url = exportXlsxInfo?.config?.url;
-            if(url){
-                createExportDialog(url)
-            }
-        }else{
-            tooltip.info(_locale.exportXlsx.notice, "");
-        }
+        const exportXlsxInfo = Store.plugins.find((plugin) => plugin.name === "exportXlsx");
+		if (exportXlsxInfo) {
+            exportXlsxInfo?.callback(Store)
+		} else {
+		  tooltip_default.info(_locale.exportXlsx.notice, "");
+		}
     });
 
     let copychange = function() {
