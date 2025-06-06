@@ -9,6 +9,7 @@ import { luckysheet_searcharray } from "./sheetSearch";
 import luckysheetFreezen from "./freezen";
 import luckysheetsizeauto from "./resize";
 import { createFilter } from "./filter";
+import method from "../global/method";
 import luckysheetSearchReplace from "./searchReplace";
 import luckysheetLocationCell from "./locationCell";
 import ifFormulaGenerator from "./ifFormulaGenerator";
@@ -3654,9 +3655,13 @@ const menuButton = {
                                 luckysheetPrint.init(plugin.config.license);
                             }
                         }
-                    } else if (itemvalue == "areas" || itemvalue == "rows" || itemvalue == "columns") {
-                        //range
-                        alert("areas");
+                    }  
+                    else if (itemvalue == "areas") {
+                        method.createHookFunction(
+                            "onPrintAreas",
+                            Store,
+                            selectionCopyShow
+                        );
                     }
                 });
             }

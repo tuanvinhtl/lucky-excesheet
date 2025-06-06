@@ -31,7 +31,7 @@ import luckysheetsizeauto from '../controllers/resize';
 import sheetmanage from '../controllers/sheetmanage';
 import conditionformat from '../controllers/conditionformat';
 import { luckysheet_searcharray } from "../controllers/sheetSearch";
-import { selectHightlightShow, selectIsOverlap } from '../controllers/select';
+import { selectHightlightShow, selectIsOverlap, selectionCopyShow } from '../controllers/select';
 import { sheetHTML, luckysheetdefaultstyle } from '../controllers/constant';
 import { createFilterOptions } from '../controllers/filter';
 import controlHistory from '../controllers/controlHistory';
@@ -2720,6 +2720,7 @@ export function getRangeBoolean(options = {}) {
     selection.copybyformat(event, JSON.stringify(arr));
 }
 
+export const selectionCopy = selectionCopyShow
 
 /**
  * 指定工作表选中一个或多个选区为选中状态并选择是否高亮，支持多种格式设置。

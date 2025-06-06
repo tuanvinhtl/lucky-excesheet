@@ -5,7 +5,7 @@ import { exportXlsx } from '../expendPlugins/exportXlsx/plugin'
 const pluginsObj = {
     'chart':chart,
     'print':print,
-    'exportXlsx':exportXlsx
+    'exportXlsx':exportXlsx,
 }
 
 const isDemo = true
