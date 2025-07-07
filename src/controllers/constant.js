@@ -1424,6 +1424,7 @@ const iconfontObjects = {
         "border-inside": " iconfont-luckysheet luckysheet-iconfont-neikuangxian",
         "border-horizontal": " iconfont-luckysheet luckysheet-iconfont-neikuanghengxian",
         "border-vertical": " iconfont-luckysheet luckysheet-iconfont-neikuangshuxian",
+        "border-reset": " iconfont-luckysheet luckysheet-iconfont-wubiankuang",
     },
     align: {
         left: " iconfont-luckysheet luckysheet-iconfont-wenbenzuoduiqi",

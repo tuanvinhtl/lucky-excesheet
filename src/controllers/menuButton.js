@@ -1239,6 +1239,12 @@ const menuButton = {
                         example:
                             '<div class="luckysheet-icon luckysheet-inline-block luckysheet-material-icon luckysheet-mousedown-cancel" style="user-select: none;opacity:1;"> <div aria-hidden="true" class="luckysheet-icon-img-container luckysheet-icon-img luckysheet-icon-border-outside iconfont-luckysheet luckysheet-iconfont-sizhoujiabiankuang" style="user-select: none;"> </div> </div>',
                     },
+                    {
+                        text: "Reset All Borders",
+                        value: "border-reset",
+                        example:
+                            '<div class="luckysheet-icon luckysheet-inline-block luckysheet-material-icon luckysheet-mousedown-cancel" style="user-select: none;opacity:1;"> <div aria-hidden="true" class="luckysheet-icon-img-container luckysheet-icon-img luckysheet-icon-border-none iconfont-luckysheet luckysheet-iconfont-wubiankuang" style="user-select: none;"> </div> </div>',
+                    },
                     { text: "", value: "split", example: "" },
                     {
                         text: locale_border.borderInside,
@@ -1544,7 +1550,8 @@ const menuButton = {
                     }
 
                     let cfg = $.extend(true, {}, Store.config);
-                    if (cfg["borderInfo"] == null) {
+
+                    if (cfg["borderInfo"] == null || itemvalue == "border-reset") {
                         cfg["borderInfo"] = [];
                     }
 
@@ -1594,6 +1601,7 @@ const menuButton = {
                                 itemvalue +
                                 iconfontObject[itemvalue],
                         );
+                        console.log($icon)
 
                     _this.focus($menuButton, itemvalue);
                 });
