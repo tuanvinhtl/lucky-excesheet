@@ -550,10 +550,6 @@ const luckysheetFreezen = {
             _this.scrollAdaptOfselect();    
         }
 
-        //有冻结时 图片 滚动适应
-        if($(".luckysheet-modal-dialog-image").length > 0 && imageCtrl.images != undefined){
-            _this.scrollAdaptOfImage();
-        }
 
         //有冻结时 图表框 滚动适应
         if($("#luckysheet-cell-main .luckysheet-data-visualization-chart").length > 0){

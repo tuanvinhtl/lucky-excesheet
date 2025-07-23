@@ -490,6 +490,13 @@ const method = {
         // remove proxy
         Store.asyncLoad = ['core'];
     },
+    destroyElements:function(){
+        $("body > .luckysheet-cols-menu").remove();
+        $("#luckysheet-modal-dialog-mask, #luckysheetTextSizeTest, #luckysheet-icon-morebtn-div").remove();
+        $("#luckysheet-input-box").parent().remove();
+        $("#luckysheet-formula-help-c").remove();
+        $(".chartSetting, .luckysheet-modal-dialog-slider").remove();
+    },
     editorChart:function(c){
         let chart_selection_color = luckyColor[0];
         let chart_id = "luckysheetEditMode-datav-chart";

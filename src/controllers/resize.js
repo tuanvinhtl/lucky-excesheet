@@ -162,60 +162,11 @@ export default function luckysheetsizeauto(isRefreshCanvas=true) {
     if(ismore){
 
         $("#luckysheet-wa-editor").append(morebtn);
-        $("#luckysheet-icon-morebtn").click(function(){
-
-            //When resize, change the width of the more button container in real time
-            $$('#luckysheet-icon-morebtn-div').style.left = '';//reset
-
-            // *这里计算containerLeft的作用是：获得容器左侧的margin值，以让点击出现的“更多按钮”栏位置不会出错。
-            const containerLeft = $$(`#${Store.container}`).getBoundingClientRect ? $$(`#${Store.container}`).getBoundingClientRect().left : 0;
-            const morebtnLeft = $$('#luckysheet-icon-morebtn-div').getBoundingClientRect().left;//get real left info
-
-            if(morebtnLeft < containerLeft){
-                $$('#luckysheet-icon-morebtn-div').style.left = containerLeft + 'px';
-            }
-
-            let right = $(window).width() - $("#luckysheet-icon-morebtn").offset().left - $("#luckysheet-icon-morebtn").width()+ $("body").scrollLeft();
-
-
-            // $("#luckysheet-icon-morebtn-div").toggle().css("right", right < 0 ? 0 : right);
-
-            // use native js operation
-            $$('#luckysheet-icon-morebtn-div').style.right = right < 0 ? 0 : right + 'px';
-
-            // change to visibility,morebtnLeft will get the actual value
-            if($$('#luckysheet-icon-morebtn-div').style.visibility === 'hidden'){
-                $$('#luckysheet-icon-morebtn-div').style.visibility = 'visible';
-            }else{
-                $$('#luckysheet-icon-morebtn-div').style.visibility = 'hidden';
-            }
-
-            let $txt = $(this).find(".luckysheet-toolbar-menu-button-caption");
-            if($txt.text().indexOf(locale_toolbar.toolMore) > -1){
-
-                const toolCloseHTML = `
-                <div class="luckysheet-toolbar-menu-button-caption luckysheet-inline-block" style="user-select: none;">
-                    ${locale_toolbar.toolClose}
-                </div>
-                <div class="luckysheet-toolbar-menu-button-dropdown luckysheet-inline-block iconfont-luckysheet luckysheet-iconfont-shangyige" style="user-select: none;font-size:12px;">
-                </div>
-                `
-                $(this).find(".luckysheet-toolbar-button-inner-box").html(toolCloseHTML);
-            }
-            else{
-
-                const toolMoreHTML = `
-                <div class="luckysheet-toolbar-menu-button-caption luckysheet-inline-block" style="user-select: none;">
-                    ${locale_toolbar.toolMore}
-                </div>
-                <div class="luckysheet-toolbar-menu-button-dropdown luckysheet-inline-block iconfont-luckysheet luckysheet-iconfont-xiayige" style="user-select: none;font-size:12px;">
-                </div>
-                `
-
-                $(this).find(".luckysheet-toolbar-button-inner-box").html(toolMoreHTML);
-            }
-
+        // Attach the event handler to the button
+        $("#luckysheet-icon-morebtn").click(function () {
+            handleMoreButtonClick();
         });
+
         //$("#luckysheet-wa-editor div").trigger("create");
 
         // $("#luckysheet-icon-morebtn-div .luckysheet-toolbar-menu-button").css("margin-right", -1);
@@ -265,6 +216,78 @@ export default function luckysheetsizeauto(isRefreshCanvas=true) {
     sheetmanage.sheetBarShowAndHide();
 }
 
+// Define the event handler as a named function
+export function handleMoreButtonClick() {
+    const _locale = locale();
+    const locale_toolbar = _locale.toolbar;
+    // When resize, change the width of the more button container in real time
+    $$('#luckysheet-icon-morebtn-div').style.left = ''; // reset
+
+    // Calculate containerLeft to ensure the "more button" bar appears in the correct position
+    const containerLeft = $$(`#${Store.container}`).getBoundingClientRect
+        ? $$(`#${Store.container}`).getBoundingClientRect().left
+        : 0;
+    const morebtnLeft = $$('#luckysheet-icon-morebtn-div').getBoundingClientRect().left; // get real left info
+
+    if (morebtnLeft < containerLeft) {
+        $$('#luckysheet-icon-morebtn-div').style.left = containerLeft + 'px';
+    }
+
+    let right =
+        $(window).width() -
+        $("#luckysheet-icon-morebtn").offset().left -
+        $("#luckysheet-icon-morebtn").width() +
+        $("body").scrollLeft();
+
+    // Use native JS operation
+    $$('#luckysheet-icon-morebtn-div').style.right = right < 0 ? 0 : right + 'px';
+
+    // Change visibility
+    if ($$('#luckysheet-icon-morebtn-div').style.visibility === 'hidden') {
+        $$('#luckysheet-icon-morebtn-div').style.visibility = 'visible';
+    } else {
+        $$('#luckysheet-icon-morebtn-div').style.visibility = 'hidden';
+    }
+
+    let $txt = $("#luckysheet-icon-morebtn").find(".luckysheet-toolbar-menu-button-caption");
+    if ($txt.text().indexOf(locale_toolbar.toolMore) > -1) {
+        const toolCloseHTML = `
+            <div class="luckysheet-toolbar-menu-button-caption luckysheet-inline-block" style="user-select: none;">
+                ${locale_toolbar.toolClose}
+            </div>
+            <div class="luckysheet-toolbar-menu-button-dropdown luckysheet-inline-block iconfont-luckysheet luckysheet-iconfont-shangyige" style="user-select: none;font-size:12px;">
+            </div>
+        `;
+        $("#luckysheet-icon-morebtn").find(".luckysheet-toolbar-button-inner-box").html(toolCloseHTML);
+    } else {
+        const toolMoreHTML = `
+            <div class="luckysheet-toolbar-menu-button-caption luckysheet-inline-block" style="user-select: none;">
+                ${locale_toolbar.toolMore}
+            </div>
+            <div class="luckysheet-toolbar-menu-button-dropdown luckysheet-inline-block iconfont-luckysheet luckysheet-iconfont-xiayige" style="user-select: none;font-size:12px;">
+            </div>
+        `;
+        $("#luckysheet-icon-morebtn").find(".luckysheet-toolbar-button-inner-box").html(toolMoreHTML);
+    }
+}
+
+export function hidenMoreMenu() {
+    const _locale = locale();
+    const locale_toolbar = _locale.toolbar;
+    // When resize, change the width of the more button container in real time
+    $$('#luckysheet-icon-morebtn-div').style.left = ''; // reset
+
+    $$('#luckysheet-icon-morebtn-div').style.visibility = 'hidden';
+
+    const toolMoreHTML = `
+            <div class="luckysheet-toolbar-menu-button-caption luckysheet-inline-block" style="user-select: none;">
+                ${locale_toolbar.toolMore}
+            </div>
+            <div class="luckysheet-toolbar-menu-button-dropdown luckysheet-inline-block iconfont-luckysheet luckysheet-iconfont-xiayige" style="user-select: none;font-size:12px;">
+            </div>
+        `;
+        $("#luckysheet-icon-morebtn").find(".luckysheet-toolbar-button-inner-box").html(toolMoreHTML);
+}
 
 export function changeSheetContainerSize(gridW, gridH){
     if(gridW==null){

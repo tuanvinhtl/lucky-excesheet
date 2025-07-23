@@ -5,7 +5,7 @@ import { locales } from "./locale/locale";
 import server from "./controllers/server";
 import luckysheetConfigsetting from "./controllers/luckysheetConfigsetting";
 import sheetmanage from "./controllers/sheetmanage";
-import luckysheetsizeauto from "./controllers/resize";
+import { handleMoreButtonClick, hidenMoreMenu } from "./controllers/resize";
 import luckysheetHandler from "./controllers/handler";
 import { initialFilterHandler } from "./controllers/filter";
 import { initialMatrixOperation } from "./controllers/matrixOperation";
@@ -244,6 +244,9 @@ luckysheet.selectHightlightShow = selectHightlightShow;
 
 // Reset parameters after destroying the table
 luckysheet.destroy = method.destroy;
+luckysheet.destroyElements = method.destroyElements;
+luckysheet.handleMoreButtonClick = handleMoreButtonClick;
+luckysheet.hidenMoreMenu = hidenMoreMenu
 
 luckysheet.showLoadingProgress = showloading;
 luckysheet.hideLoadingProgress = hideloading;
