@@ -19,14 +19,14 @@ function print(options, config, isDemo) {
     // loadLinks(dependLinks);
 
     // seriesLoadScripts(dependScripts, null, function() {});
-    if (luckysheetPrint) {
-        arrayRemoveItem(Store.asyncLoad, "print");
-        Store.luckysheetPrint = luckysheetPrint;
-        const link = document.createElement("link");
-        link.setAttribute("rel", "stylesheet");
-        link.setAttribute("type", "text/css");
-        document.head.appendChild(link);
-    }
+    // if (luckysheetPrint) {
+    //     arrayRemoveItem(Store.asyncLoad, "print");
+    //     Store.luckysheetPrint = luckysheetPrint;
+    //     const link = document.createElement("link");
+    //     link.setAttribute("rel", "stylesheet");
+    //     link.setAttribute("type", "text/css");
+    //     document.head.appendChild(link);
+    // }
 }
 
 export { print };
