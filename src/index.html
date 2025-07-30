@@ -1914,6 +1914,18 @@
 			//  };
 			//  luckysheet.sheetmanage.setCustomSheet(customSheetconfig);
 			luckysheet.create(options);
+			const base64Image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASgAAAEUCAYAAACYv6vPAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAIdUAACHVAQSctJ0AALC7SURBVHhe7Z0HnBVFtvDrDkMOA8yQYYacc84gUQwgIEFBxISSUQQRkIxIUBREJIg5i6iIAVEx56y7q6tu3m/f97597+2+3XV3Vc53TnVV39PVp2+YAAPe+v3+P5iZG7qrzvn3qeq+fVWmnXItptpOKKcanlvRp/45uarpuBaqw/ndVNvzemo60b+Th6iOE+eqzlPvVZ3P/7PqPg1UjwvTpxs+r/";
+
+			// Insert the image into cell at row 3, column 2
+			luckysheet.insertImageWithSizeAndOffset(base64Image, {
+				rowIndex: 3,
+				colIndex: 2,
+				width: 120,
+				height: 120,
+				success: () => {
+					console.log("Base64 image inserted successfully!");
+				}
+			});
 		})
 	</script>
 	<style>
