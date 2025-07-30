@@ -19,6 +19,12 @@ jobs:
           node-version: 18
           registry-url: 'https://registry.npmjs.org/'
 
+      - name: Get version from tag and update package.json
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "Publishing version: $VERSION"
+          npm version "$VERSION" --no-git-tag-version
+
       - name: Install dependencies & Generate static files # 安装依赖打包demo和文档
         run: |
           node -v
