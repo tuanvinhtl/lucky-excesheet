@@ -19,9 +19,11 @@ jobs:
           node-version: 18
           registry-url: 'https://registry.npmjs.org/'
 
-      - name: Install Dependencies & Build
+      - name: Install dependencies & Generate static files # 安装依赖打包demo和文档
         run: |
-          npm ci
+          node -v
+          npm install
+          npm install gulp -g
           npm run build
 
       - name: Publish to npm
