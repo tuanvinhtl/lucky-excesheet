@@ -36,7 +36,6 @@ const pkg = require('./package.json');
 const banner = `/*! @preserve
  * ${pkg.name}
  * version: ${pkg.version}
- * https://github.com/mengshukeji/Luckysheet
  */`;
 
 // uglify js Compression configuration https://github.com/mishoo/UglifyJS#minify-options
