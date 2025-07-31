@@ -708,6 +708,10 @@ const luckysheetMoreFormat = {
             "value": "0.00"
         },
         {
+            "name": "1234.567",
+            "value": "0.000"
+        },
+        {
             "name": "1,235",
             "value": "#,##0"
         },
@@ -970,6 +974,10 @@ const luckysheetMoreFormat = {
             {
                 "name": "1234.56",
                 "value": "0.00"
+            },
+            {
+                "name": "1234.567",
+                "value": "0.000"
             },
             {
                 "name": "1,235",
