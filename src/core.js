@@ -24,8 +24,10 @@ import { getcellvalue, getdatabyselection } from "./global/getdata";
 import { setcellvalue } from "./global/setdata";
 import { selectHightlightShow } from "./controllers/select";
 import { zoomInitial } from "./controllers/zoom";
+import { rowlenByRange , computeRowlenByContent} from "./global/getRowlen";
 // import { printInitial } from "./controllers/print";
 import method from "./global/method";
+import editor from "./global/editor";
 
 import * as api from "./global/api";
 
@@ -56,6 +58,7 @@ luckysheet.create = function (setting) {
     }
 
     let extendsetting = common_extend(defaultSetting, setting);
+    const onReady = setting?.onReady;
 
     let loadurl = extendsetting.loadUrl,
         menu = extendsetting.menu,
@@ -183,7 +186,8 @@ luckysheet.create = function (setting) {
         });
     }
 
-    initChat()
+    initChat();
+    if (typeof onReady === "function") onReady(Store, {$, rowlenByRange, computeRowlenByContent, deepCopyFlowData: editor.deepCopyFlowData , jfrefreshgrid, luckysheetrefreshgrid} );
 };
 
 function initialWorkBook() {
@@ -252,6 +256,8 @@ luckysheet.hidenMoreMenu = hidenMoreMenu
 luckysheet.showLoadingProgress = showloading;
 luckysheet.hideLoadingProgress = hideloading;
 luckysheet.luckysheetextendData = luckysheetextendData;
+luckysheet.rowlenByRange = rowlenByRange;
+luckysheet.deepCopyFlowData = editor.deepCopyFlowData
 
 luckysheet.locales = locales;
 

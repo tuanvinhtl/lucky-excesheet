@@ -3949,7 +3949,6 @@ const menuButton = {
                 col_ed = Store.luckysheet_select_save[s]["column"][1];
 
             this.updateFormatCell(d, attr, foucsStatus, row_st, row_ed, col_st, col_ed);
-
             if (attr == "tb" || attr == "tr" || attr == "fs") {
                 cfg = rowlenByRange(d, row_st, row_ed, cfg);
             }

@@ -26,7 +26,7 @@ const initListener = function(){
     createProxy(Store, 'jfredo',(target, property, val, receiver)=>{
         if (property !== 'length') {
             //  钩子函数
-            method.createHookFunction('updated',val)
+            method.createHookFunction('updated',val, Store)
         }
         undoAccessible(Store.jfredo.length);
     } );
