@@ -79,6 +79,9 @@ const menuButton = {
                     value = this.defualtFont[itemvalue];
                 }
             }
+            if(value===undefined){
+                value = this.defualtFont[2];
+            }
         }
         $obj.find(".luckysheet-cols-menuitem")
             .find("span.icon")
