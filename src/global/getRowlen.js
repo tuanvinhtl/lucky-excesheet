@@ -44,6 +44,7 @@ function rowlenByRange(d, r1, r2, cfg) {
 
         for(let c = 0; c < d[r]?.length; c++){
             let cell = d[r][c];
+            
 
             if(cell == null){
                 continue;
@@ -82,13 +83,14 @@ function rowlenByRange(d, r1, r2, cfg) {
             }
         }
 
-        currentRowLen = currentRowLen/Store.zoomRatio;
+        const marginRowLen = cfg_clone['marginRowLen'] | 0
 
+        currentRowLen = currentRowLen/Store.zoomRatio;
         if(currentRowLen != Store.defaultrowlen){
-            cfg_clone["rowlen"][r] = currentRowLen;
+            cfg_clone["rowlen"][r] = currentRowLen + marginRowLen;
         }else{
             if(cfg["rowlen"]?.[r]){
-                cfg_clone["rowlen"][r] = cfg["rowlen"][r]
+                cfg_clone["rowlen"][r] = cfg["rowlen"][r] + marginRowLen
             }
         }
     }

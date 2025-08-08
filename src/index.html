@@ -67,6 +67,7 @@
 								if (cfg["rowlen"] == null) {
 									cfg["rowlen"] = {};
 								}
+							cfg["marginRowLen"] = 20;
 							cfg = func.rowlenByRange(d, 0, 100, cfg);
 							func?.jfrefreshgrid(d, store.luckysheet_select_save, allParam = { cfg: cfg, RowlChange: true }, false);
 						}, 500);
@@ -173,7 +174,7 @@
 							console.dir(111)
 						},
 					},
-					data: [sheetCell, sheetFormula, sheetConditionFormat, sheetSparkline, sheetTable, sheetComment, sheetPivotTableData, sheetPivotTable, sheetChart, sheetPicture, sheetDataVerification, opswizData]
+					data: [sheetFormula, sheetConditionFormat, sheetSparkline, sheetTable, sheetComment, sheetPivotTableData, sheetPivotTable, sheetChart, sheetPicture, sheetDataVerification, opswizData]
 				}
 			}
 			options.loading = {
