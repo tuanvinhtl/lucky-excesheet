@@ -530,6 +530,20 @@ function rightclickHTML() {
                             px
                         </div>
                     </div>
+                    <div id="luckysheetResetCustomHeight" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${
+                        config.resetCustomHeight ? "block" : "none"
+                    };">
+                        <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
+                            toolbar.resetCustomHeight
+                        }</div>
+                    </div>
+                    <div id="luckysheetResetDefault" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${
+                        config.resetDefault ? "block" : "none"
+                    };">
+                        <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
+                            toolbar.resetDefault
+                        }</div>
+                    </div>
                 </div>
                 <div id="luckysheet-cols-rows-shift">
                     <div class="luckysheet-menuseparator luckysheet-mousedown-cancel" role="separator" style="display:${
@@ -1476,6 +1490,8 @@ function customCellRightClickConfig() {
         link: true, // insert link
         data: true, // data verification
         cellFormat: true, // Set cell format
+        resetCustomHeight: true, // Reset custom row 
+        resetDefault: true, // Reset custom row 
     };
 
     // cellRightClickConfig determines the final result

@@ -5553,6 +5553,78 @@ export default function luckysheetHandler() {
         openCellFormatModel();
     });
 
+        //reset row
+    $("#luckysheetResetCustomHeight").click(function (e) {
+        // Get the selected rows
+        const selectedRows = Store.luckysheet_select_save.map((selection) => selection.row);
+
+        // Check if any rows are selected
+        if (selectedRows.length === 0) {
+            console.log("No rows selected to reset.");
+            return;
+        }
+
+        // Reset customHeight for the selected rows
+        const cfg = $.extend(true, {}, Store.config); // Clone the current config
+        if (cfg["customHeight"]) {
+            selectedRows.forEach((rowRange) => {
+                for (let r = rowRange[0]; r <= rowRange[1]; r++) {
+                    delete cfg["customHeight"][r]; // Remove customHeight for the row
+                }
+            });
+        }
+
+        // Update the Store configuration
+        Store.config = cfg;
+        Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)].config = Store.config;
+
+        // Save the updated configuration to the server (if applicable)
+        server.saveParam("cg", Store.currentSheetIndex, cfg["customHeight"], { k: "customHeight" });
+
+        // Hide the right-click menu
+        $("#luckysheet-rightclick-menu").hide();
+
+        jfrefreshgrid_rhcw(Store.flowdata.length, null);
+    });
+
+            //reset row
+    $("#luckysheetResetDefault").click(function (e) {
+        // Get the selected rows
+        const selectedRows = Store.luckysheet_select_save.map((selection) => selection.row);
+
+        // Check if any rows are selected
+        if (selectedRows.length === 0) {
+            console.log("No rows selected to reset.");
+            return;
+        }
+
+        // Reset customHeight for the selected rows
+        const cfg = $.extend(true, {}, Store.config); // Clone the current config
+        if (cfg["customHeight"]) {
+            selectedRows.forEach((rowRange) => {
+                for (let r = rowRange[0]; r <= rowRange[1]; r++) {
+                    delete cfg["customHeight"][r]; // Remove customHeight for the row
+                    // Retain the default row height instead of deleting it
+                    if (cfg["rowlen"] && cfg["rowlen"][r]) {
+                        cfg["rowlen"][r] = Store.defaultrowlen;
+                    }
+                }
+            });
+        }
+
+        // Update the Store configuration
+        Store.config = cfg;
+        Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)].config = Store.config;
+
+        // Save the updated configuration to the server (if applicable)
+        server.saveParam("cg", Store.currentSheetIndex, cfg["customHeight"], { k: "customHeight" });
+
+        // Hide the right-click menu
+        $("#luckysheet-rightclick-menu").hide();
+
+        jfrefreshgrid_rhcw(Store.flowdata.length, null);
+    });
+
     //冻结行列
     $("#luckysheet-freezen-btn-horizontal").click(function() {
         if ($.trim($(this).text()) == locale().freezen.freezenCancel) {

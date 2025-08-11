@@ -6165,6 +6165,8 @@ export default {
 
         cellFormat: "Cell format config",
         print: "Print",
+        resetCustomHeight: "Reset Custom Height",
+        resetDefault: "Reset Default",
     },
     alternatingColors: {
         applyRange: "Apply to range",

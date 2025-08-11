@@ -5853,6 +5853,8 @@ export default {
 
         cellFormat:"Configuración formato de celda",
         print:"Imprimir",
+        resetCustomHeight: "Reset Custom Height",
+        resetDefault: "Reset Default",
     },
     alternatingColors:{
         applyRange: 'Aplicar a rango',

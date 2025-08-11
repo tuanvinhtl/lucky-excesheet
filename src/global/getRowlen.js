@@ -36,9 +36,9 @@ function rowlenByRange(d, r1, r2, cfg) {
 
         let currentRowLen = Store.defaultrowlen;
 
-        // if(cfg_clone["customHeight"][r]==1){
-        //     continue;
-        // }
+        if(cfg_clone["customHeight"][r]==1){
+            continue;
+        }
 
         delete cfg_clone["rowlen"][r];
 
