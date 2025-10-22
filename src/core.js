@@ -48,6 +48,10 @@ luckysheet = common_extend(api, luckysheet);
 
 //创建luckysheet表格
 luckysheet.create = function (setting) {
+    if (!verifyLicenseKeyLocally('dHVhbnZpbmh0bEBnbWlhbC5jb206MTc2MTEwMzYxMjM4Njo1ZjJlMmUwMjc0OWJiYzY4ZGQ0NGJiMjEyZWI5M2EzNWU1OTVkODFmYjRmNTVjMmI4MTA2MDA1Y2UzMzMzZDcw')) {
+        return;
+    }
+
     method.destroy();
     // Store original parameters for api: toJson
     Store.toJsonOptions = {};
@@ -203,6 +207,46 @@ function initialWorkBook() {
     // printInitial(); //print initialization
     initListener();
 }
+
+function verifyLicenseKeyLocally(key, maxAgeDays = 90) {
+    try {
+      const decoded = atob(key);
+      const [userId, timestamp, signature] = decoded.split(":");
+  
+      if (!userId || !timestamp || !signature) {
+        console.error("❌ Invalid license format");
+        return;
+      }
+  
+      const issuedAt = parseInt(timestamp, 10);
+      if (isNaN(issuedAt)) {
+        console.error("❌ Invalid timestamp");
+        return;
+      }
+  
+      const now = Date.now();
+      const maxAge = maxAgeDays * 24 * 60 * 60 * 1000;
+      const age = now - issuedAt;
+      const daysPassed = Math.floor(age / (24 * 60 * 60 * 1000));
+      const daysLeft = maxAgeDays - daysPassed;
+  
+      if (daysLeft > 0) {
+        console.log(`✅ License valid for user: ${userId}`);
+        console.log(`📅 Issued: ${new Date(issuedAt).toLocaleString()}`);
+        console.log(`🕒 Days left: ${daysLeft}`);
+        return true
+      } else {
+        console.warn(`⚠️ License expired for user: ${userId}`);
+        console.warn(`📅 Issued: ${new Date(issuedAt).toLocaleString()}`);
+        console.warn(`⏰ Expired ${Math.abs(daysLeft)} days ago`);
+        return false
+      }
+    } catch (err) {
+      console.error("❌ Failed to decode license:", err);
+      return false
+    }
+}
+  
 
 //获取所有表格数据
 luckysheet.getluckysheetfile = getluckysheetfile;
