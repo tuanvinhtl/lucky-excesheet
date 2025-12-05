@@ -214,13 +214,11 @@ function verifyLicenseKeyLocally(key, maxAgeDays = 90) {
       const [userId, timestamp, signature] = decoded.split(":");
   
       if (!userId || !timestamp || !signature) {
-        console.error("❌ Invalid license format");
         return;
       }
   
       const issuedAt = parseInt(timestamp, 10);
       if (isNaN(issuedAt)) {
-        console.error("❌ Invalid timestamp");
         return;
       }
   
@@ -231,18 +229,11 @@ function verifyLicenseKeyLocally(key, maxAgeDays = 90) {
       const daysLeft = maxAgeDays - daysPassed;
   
       if (daysLeft > 0) {
-        console.log(`✅ License valid for user: ${userId}`);
-        console.log(`📅 Issued: ${new Date(issuedAt).toLocaleString()}`);
-        console.log(`🕒 Days left: ${daysLeft}`);
         return true
       } else {
-        console.warn(`⚠️ License expired for user: ${userId}`);
-        console.warn(`📅 Issued: ${new Date(issuedAt).toLocaleString()}`);
-        console.warn(`⏰ Expired ${Math.abs(daysLeft)} days ago`);
         return false
       }
     } catch (err) {
-      console.error("❌ Failed to decode license:", err);
       return false
     }
 }
