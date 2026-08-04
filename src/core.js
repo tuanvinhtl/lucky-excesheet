@@ -48,7 +48,7 @@ luckysheet = common_extend(api, luckysheet);
 
 //创建luckysheet表格
 luckysheet.create = function (setting) {
-    if (!verifyLicenseKeyLocally('dHVhbnZpbmh0bEBnbWlhbC5jb206MTc2MTEwMzYxMjM4Njo1ZjJlMmUwMjc0OWJiYzY4ZGQ0NGJiMjEyZWI5M2EzNWU1OTVkODFmYjRmNTVjMmI4MTA2MDA1Y2UzMzMzZDcw')) {
+    if (!verifyLicenseKeyLocally('dHVhbnZpbmh0bEBnbWlhbC5jb206MTc4NTgyNzY5ODE5MDo1ZjJlMmUwMjc0OWJiYzY4ZGQ0NGJiMjEyZWI5M2EzNWU1OTVkODFmYjRmNTVjMmI4MTA2MDA1Y2UzMzMzZDcw')) {
         return;
     }
 
@@ -208,7 +208,10 @@ function initialWorkBook() {
     initListener();
 }
 
-function verifyLicenseKeyLocally(key, maxAgeDays = 90) {
+// Key phát hành 2026-08-04, hạn 730 ngày → hết hạn 2028-08-03.
+// Hết hạn thì luckysheet.create() return ngay và màn Excel trắng trơn,
+// nên phát key mới (timestamp hiện tại) rồi build + copy bundle sang app.
+function verifyLicenseKeyLocally(key, maxAgeDays = 730) {
     try {
       const decoded = atob(key);
       const [userId, timestamp, signature] = decoded.split(":");

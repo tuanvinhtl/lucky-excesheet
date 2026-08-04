@@ -19,6 +19,88 @@
 <body>
 	<div id="luckysheet" style="margin:0px;padding:0px;position:absolute;width:100%;height:100%;left: 0px;top: 0px;">
 	</div>
+
+	<!-- Nút Import Hydrate & Export PDF -->
+	<div style="position: absolute; top: 10px; right: 280px; z-index: 9999; display: flex; gap: 10px;">
+        <input type="file" id="luckysheet-import-file" accept=".xlsx" style="display: none;" />
+		<button onclick="document.getElementById('luckysheet-import-file').click()" style="padding: 5px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+            <i class="fa fa-folder-open"></i> Import Hydrate XLSX
+        </button>
+
+        <button onclick="exportPdfToPuppeteer()" style="padding: 5px 15px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+            <i class="fa fa-file-pdf"></i> Export PDF (Puppeteer)
+        </button>
+	</div>
+
+	<script>
+        function exportPdfToPuppeteer() {
+            luckysheet.showLoadingProgress();
+            
+            // Lấy toàn bộ JSON Data của Luckysheet
+            const luckyJsonUrl = luckysheet.toJson();
+            
+            fetch('http://localhost:3000/api/export-pdf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(luckyJsonUrl)
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Chưa khởi động Server chứa Puppeteer?");
+                return res.blob();
+            })
+            .then(blob => {
+                luckysheet.hideLoadingProgress();
+                // Giả lập DOM a để tải file PDF về trình duyệt
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = (luckyJsonUrl.title || 'report') + '.pdf';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(err => {
+                luckysheet.hideLoadingProgress();
+                alert('Lỗi: ' + err.message);
+                console.error(err);
+            });
+        }
+
+		document.getElementById('luckysheet-import-file').addEventListener('change', function(e) {
+			const file = e.target.files[0];
+			if (!file) return;
+
+			luckysheet.showLoadingProgress();
+			const formData = new FormData();
+			formData.append('file', file);
+
+			fetch('http://localhost:3000/api/import', {
+				method: 'POST',
+				body: formData
+			})
+			.then(res => res.json())
+			.then(response => {
+				luckysheet.hideLoadingProgress();
+				if (response.error) {
+					alert(response.msg);
+					return;
+				}
+				
+				// Redraw the entire spreadsheet with the extracted data
+				luckysheet.destroy();
+				const reOptions = { ...window.luckysheetOptions, data: response.data.data };
+				luckysheet.create(reOptions);
+			})
+			.catch(err => {
+				luckysheet.hideLoadingProgress();
+				alert('Lỗi kết nối Server!');
+				console.error(err);
+			});
+            e.target.value = ''; // Reset file input
+		});
+	</script>
+
 	<script src="./demoData/demoFeature.js"></script>
 	<script src="./demoData/sheetFormula.js"></script>
 	<script src="./demoData/sheetCell.js"></script>
@@ -72,7 +154,7 @@
 							func?.jfrefreshgrid(d, store.luckysheet_select_save, allParam = { cfg: cfg, RowlChange: true }, false);
 						}, 500);
 					},
-					plugins: [{ name: 'chart' }, { name: 'exportXlsx', config: { url: 'http://localhost:3002/luckyToXlsx' } }, {
+					plugins: [{ name: 'chart' }, {callback:()=>{}, name: 'exportXlsx', config: { url: 'http://localhost:3000/api/export' } }, {
 						name: 'print', config: {
 							license: ''
 						}
@@ -177,6 +259,8 @@
 					data: [sheetCell, sheetFormula, sheetConditionFormat, sheetSparkline, sheetTable, sheetComment, sheetPivotTableData, sheetPivotTable, sheetChart, sheetPicture, sheetDataVerification, opswizData]
 				}
 			}
+			window.luckysheetOptions = options; // Lưu lại global space để dùng cho import re-hydrate
+			
 			options.loading = {
 				image: () => {
 					return `<svg viewBox="25 25 50 50" class="circular">

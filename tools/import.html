@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Luckysheet — import debug data</title>
+<link rel="stylesheet" href="../dist/plugins/css/pluginsCss.css" />
+<link rel="stylesheet" href="../dist/plugins/plugins.css" />
+<link rel="stylesheet" href="../dist/css/luckysheet.css" />
+<link rel="stylesheet" href="../dist/assets/iconfont/iconfont.css" />
+<style>
+  html, body { margin: 0; height: 100%; font: 13px/1.4 -apple-system, "Segoe UI", sans-serif; }
+  #bar { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-bottom: 1px solid #dfe1e6; background: #fafbfc; flex-wrap: wrap; }
+  #bar label { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+  #drop { flex: 1; min-width: 220px; padding: 6px 10px; border: 1px dashed #b3b9c4; border-radius: 4px; color: #5e6c84; }
+  #drop.over { border-color: #0052cc; background: #e9f2ff; color: #0052cc; }
+  #info { color: #5e6c84; }
+  button { padding: 4px 10px; border: 1px solid #c7c9cc; border-radius: 4px; background: #fff; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="bar">
+  <input type="file" id="file" accept="application/json,.json" />
+  <div id="drop">…or drop the JSON exported by the OpsWiz editor here</div>
+  <label><input type="checkbox" id="useCreateOptions" checked /> dùng createOptions của app</label>
+  <label><input type="checkbox" id="keepAuthority" checked /> giữ config.authority</label>
+  <button id="reload">Nạp lại</button>
+  <span id="info"></span>
+</div>
+<div id="luckysheet" style="margin:0px;padding:0px;position:absolute;width:100%;height:calc(100% - 46px);left:0px;top:46px;"></div>
+
+<script src="../dist/plugins/js/plugin.js"></script>
+<script src="../dist/luckysheet.umd.js"></script>
+<script>
+/*
+ * Opens a workbook exported from the OpsWiz React editor (its "Export Data"
+ * button) in the bare library, so a bug can be pinned on the library or on the
+ * app's customisation layer.
+ *
+ * The export is taken AFTER the app has finished its ExcelJS conversion and its
+ * rich-text / number-format / lock re-apply passes, so what lands here is the
+ * end state the user was looking at. Reproduce here => library. Cannot
+ * reproduce here => the app's own code.
+ *
+ * The two checkboxes let you bisect the app's create() options and its sheet
+ * protection without editing this file.
+ */
+let payload = null
+let created = false
+
+// KHÔNG đặt tên là `$`: khai báo const ở cấp script sẽ che mất jQuery toàn cục,
+// khiến $("#"+container) bên trong bundle trả về null và destroy() nổ.
+const el = id => document.getElementById(id)
+const info = msg => { el('info').textContent = msg }
+
+function stripHooks(options) {
+    // Hook callbacks do not survive JSON, and plugin callbacks point at app code.
+    if (!options) return {}
+    const { hook, plugins, container, ...rest } = options
+    return rest
+}
+
+function render() {
+    if (!payload) return
+    const sheets = JSON.parse(JSON.stringify(payload.sheets || []))
+
+    if (!el('keepAuthority').checked) {
+        sheets.forEach(s => { if (s.config) delete s.config.authority })
+    }
+
+    const base = el('useCreateOptions').checked ? stripHooks(payload.createOptions) : {}
+
+    // destroy() on a never-created instance throws on its own internals
+    if (created) {
+        try { window.luckysheet.destroy() } catch (e) { console.warn('destroy:', e.message) }
+    }
+    created = true
+    window.luckysheet.create(Object.assign({}, base, {
+        container: 'luckysheet',
+        lang: 'en',
+        showinfobar: false,
+        data: sheets,
+    }))
+
+    const merged = sheets[0] && sheets[0].config && sheets[0].config.merge
+    info(`${sheets.length} sheet · ${merged ? Object.keys(merged).length : 0} vùng merge · authority ${sheets[0] && sheets[0].config && sheets[0].config.authority ? 'BẬT' : 'tắt'}`)
+}
+
+function load(file) {
+    const reader = new FileReader()
+    reader.onload = () => {
+        try {
+            payload = JSON.parse(reader.result)
+        } catch (err) {
+            info('JSON hỏng: ' + err.message)
+            return
+        }
+        if (!payload.sheets) {
+            info('Thiếu trường "sheets" — file này không phải bản export của editor')
+            return
+        }
+        console.log('meta:', payload.meta)
+        console.log('createOptions:', payload.createOptions)
+        render()
+    }
+    reader.readAsText(file)
+}
+
+el('file').addEventListener('change', e => e.target.files[0] && load(e.target.files[0]))
+el('reload').addEventListener('click', render)
+el('useCreateOptions').addEventListener('change', render)
+el('keepAuthority').addEventListener('change', render)
+
+const drop = el('drop')
+;['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over') }))
+;['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over') }))
+drop.addEventListener('drop', e => e.dataTransfer.files[0] && load(e.dataTransfer.files[0]))
+
+// Handy in the console while poking at a reproduction.
+window.__dump = (r, c) => {
+    const f = window.luckysheet.getluckysheetfile().find(s => s.status === 1)
+    return f.data && f.data[r] && f.data[r][c]
+}
+</script>
+</body>
+</html>
