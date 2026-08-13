@@ -3840,6 +3840,13 @@ const menuButton = {
                         }
                         d[r][c]["ct"]["fa"] = foucsStatus;
                         d[r][c]["ct"]["t"] = type;
+                        // Picking any non-text format retires the quote-prefix flag.
+                        // qp forces setcellvalue() back to {fa:"@", t:"s"}, so leaving
+                        // it set would silently undo the format the user just chose the
+                        // next time the cell is written or the sheet is reloaded.
+                        if (foucsStatus != "@" && d[r][c]["qp"] != null) {
+                            delete d[r][c]["qp"];
+                        }
                     } else {
                         d[r][c] = { ct: { fa: foucsStatus, t: type }, v: value, m: mask };
                     }

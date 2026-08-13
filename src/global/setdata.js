@@ -5,6 +5,18 @@ import server from "../controllers/server";
 import luckysheetConfigsetting from "../controllers/luckysheetConfigsetting";
 import Store from "../store/index";
 
+// A cell can carry the quote-prefix flag (qp) from an xlsx import — Excel sets it
+// on text-formatted cells — while ALSO carrying a number format the user picked
+// later. qp used to win unconditionally below, which snapped the cell back to
+// {fa:"@", t:"s"} on every write: a format chosen in the template editor was
+// saved correctly but was gone again on reload, and re-saving then persisted the
+// text. An explicit, non-text mask is a deliberate choice, so it outranks the
+// stale import flag. "General" is not explicit enough to override qp.
+function hasExplicitNumberFormat(cell) {
+    const fa = cell != null && cell.ct != null ? cell.ct.fa : null;
+    return fa != null && fa !== "@" && fa !== "General";
+}
+
 //Set cell value
 function setcellvalue(r, c, d, v) {
     if (d == null) {
@@ -71,7 +83,7 @@ function setcellvalue(r, c, d, v) {
         cell.ct = { fa: "@", t: "s" };
         cell.v = vupdateStr.substr(1);
         cell.qp = 1;
-    } else if (cell.qp == 1) {
+    } else if (cell.qp == 1 && !hasExplicitNumberFormat(cell)) {
         cell.m = vupdateStr;
         cell.ct = { fa: "@", t: "s" };
         cell.v = vupdateStr;
@@ -153,7 +165,18 @@ function setcellvalue(r, c, d, v) {
                 mask = genarate(vupdate);
 
                 cell.m = mask[0].toString();
-                cell.ct = mask[1];
+                // Only adopt the inferred format when it is a real one. A number
+                // mask cannot render a template placeholder like "{freight_amount}",
+                // so update() returns the value untouched and genarate() infers
+                // "General" from the raw string — which silently discarded the
+                // format the user had just chosen, and the next save persisted the
+                // loss. Excel keeps a cell's number format when you type text into
+                // it, so keep ours too and let only `m` fall back. A meaningful
+                // inference (percent, date, …) still wins.
+                const inferred = mask[1];
+                if (!(hasExplicitNumberFormat(cell) && inferred != null && inferred.fa === "General")) {
+                    cell.ct = inferred;
+                }
                 cell.v = mask[2];
             } else {
                 cell.m = mask.toString();
