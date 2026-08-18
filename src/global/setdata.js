@@ -173,8 +173,19 @@ function setcellvalue(r, c, d, v) {
                 // loss. Excel keeps a cell's number format when you type text into
                 // it, so keep ours too and let only `m` fall back. A meaningful
                 // inference (percent, date, …) still wins.
+                //
+                // "@" has to count as meaningless for the same reason "General"
+                // does. Both are what genarate() falls back to when it cannot read
+                // the value as a number, and which of the two comes back is an
+                // accident of the string's shape: a table placeholder like
+                // "[[$timecharter.tcp_item_amount]]" opens with a bracket, a real
+                // token in number-format syntax, so it is inferred as text, where
+                // "{gross_hire_amount}" is inferred as General. Only the latter used
+                // to be protected, so the bracket form lost its mask on every write.
                 const inferred = mask[1];
-                if (!(hasExplicitNumberFormat(cell) && inferred != null && inferred.fa === "General")) {
+                const inferredIsFallback = inferred != null
+                    && (inferred.fa === "General" || inferred.fa === "@");
+                if (!(hasExplicitNumberFormat(cell) && inferredIsFallback)) {
                     cell.ct = inferred;
                 }
                 cell.v = mask[2];
