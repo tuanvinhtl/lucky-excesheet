@@ -248,8 +248,48 @@
 }
 
 
+/*
+ * The unlock prompt: a sentence, a password box, two buttons.
+ *
+ * It used to declare `height: 180px`, which is neither enough nor too little but
+ * simply unrelated to what is in it — the sentence wraps to two lines, so the box
+ * ended with a band of dead space under the buttons, and a longer translation would
+ * have run out the bottom instead. Everything here sizes to its content.
+ */
 .luckysheet-protection-sheet-validation{
     width: 390px;
-    height: 180px;
+    height: auto;
     display: none;
+}
+
+/* The shell hard-codes a 600x550 content area for the big protection panel. This
+   dialog is three short rows and has to measure itself. */
+.luckysheet-protection-sheet-validation .luckysheet-modal-dialog-content{
+    width: auto;
+    height: auto;
+}
+
+/* Rows are a fixed 35px, which is one line of text. The prompt takes two. */
+.luckysheet-protection-sheet-validation .luckysheet-slider-protection-row{
+    width: 100%;
+    height: auto;
+    left: 0;
+}
+
+/* ...and the columns inside them are absolutely positioned at 100% height, which
+   collapses to nothing once the row stops being a fixed size. */
+.luckysheet-protection-sheet-validation .luckysheet-slider-protection-column{
+    position: relative;
+    height: auto;
+}
+
+.luckysheet-protection-sheet-validation .luckysheet-protection-rangeItemiInput{
+    height: 30px;
+    padding: 0 8px;
+    box-sizing: border-box;
+}
+
+.luckysheet-protection-sheet-validation .luckysheet-modal-dialog-buttons{
+    margin-top: 20px;
+    text-align: right;
 }

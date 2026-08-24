@@ -12,6 +12,7 @@ import luckysheetConfigsetting from '../controllers/luckysheetConfigsetting';
 import editor from './editor';
 import luckysheetcreatesheet from './createsheet';
 import Store from '../store';
+import { resetProtectionState } from '../controllers/protection';
 
 const defaultConfig = {
     defaultStore:{
@@ -440,7 +441,13 @@ const method = {
         //document event release
         $(document).off(".luckysheetEvent");
         $(document).off(".luckysheetProtection");
-        
+
+        // The two lines above, plus the .luckysheet-modal-dialog-slider removal, throw
+        // away the protection modal and its handlers. protection.js still believes it
+        // built them, so the next table would find its own "already initialised" flag
+        // set and never rebuild the markup — Protect Sheet opens nothing at all.
+        resetProtectionState();
+
         //参数重置
         luckysheetFreezen.initialHorizontal = true;
         luckysheetFreezen.initialVertical = true;
