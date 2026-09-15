@@ -719,6 +719,13 @@ const luckysheetMoreFormat = {
             "name": "1,234.56",
             "value": "#,##0.00"
         },
+        // Three decimals *with* the thousands separator. The list had `0.000`
+        // but no grouped counterpart, so a quantity could have three decimals or
+        // a comma, never both — 12345.678 where the sheet wanted 12,345.678.
+        {
+            "name": "1,234.567",
+            "value": "#,##0.000"
+        },
         {
             "name": "1,235",
             "value": "#,##0_);(#,##0)"
@@ -988,6 +995,12 @@ const luckysheetMoreFormat = {
             {
                 "name": "1,234.56",
                 "value": "#,##0.00"
+            },
+            // Kept in step with the dead copy above — this is the list that is
+            // actually rendered, so an entry added only there would never show.
+            {
+                "name": "1,234.567",
+                "value": "#,##0.000"
             },
             {
                 "name": "1,235",
