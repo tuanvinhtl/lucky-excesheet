@@ -48,6 +48,10 @@ luckysheet = common_extend(api, luckysheet);
 
 //创建luckysheet表格
 luckysheet.create = function (setting) {
+    if (!verifyLicenseKeyLocally('dHVhbnZpbmh0bEBnbWlhbC5jb206MTc4NTgyNzY5ODE5MDo1ZjJlMmUwMjc0OWJiYzY4ZGQ0NGJiMjEyZWI5M2EzNWU1OTVkODFmYjRmNTVjMmI4MTA2MDA1Y2UzMzMzZDcw')) {
+        return;
+    }
+
     method.destroy();
     // Store original parameters for api: toJson
     Store.toJsonOptions = {};
@@ -203,6 +207,40 @@ function initialWorkBook() {
     // printInitial(); //print initialization
     initListener();
 }
+
+// Key phát hành 2026-08-04, hạn 730 ngày → hết hạn 2028-08-03.
+// Hết hạn thì luckysheet.create() return ngay và màn Excel trắng trơn,
+// nên phát key mới (timestamp hiện tại) rồi build + copy bundle sang app.
+function verifyLicenseKeyLocally(key, maxAgeDays = 730) {
+    try {
+      const decoded = atob(key);
+      const [userId, timestamp, signature] = decoded.split(":");
+  
+      if (!userId || !timestamp || !signature) {
+        return;
+      }
+  
+      const issuedAt = parseInt(timestamp, 10);
+      if (isNaN(issuedAt)) {
+        return;
+      }
+  
+      const now = Date.now();
+      const maxAge = maxAgeDays * 24 * 60 * 60 * 1000;
+      const age = now - issuedAt;
+      const daysPassed = Math.floor(age / (24 * 60 * 60 * 1000));
+      const daysLeft = maxAgeDays - daysPassed;
+  
+      if (daysLeft > 0) {
+        return true
+      } else {
+        return false
+      }
+    } catch (err) {
+      return false
+    }
+}
+  
 
 //获取所有表格数据
 luckysheet.getluckysheetfile = getluckysheetfile;

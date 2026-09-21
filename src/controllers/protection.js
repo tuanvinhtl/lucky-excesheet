@@ -14,6 +14,39 @@ import cleargridelement from '../global/cleargridelement';
 let isInitialProtection = false, isInitialProtectionAddRang = false, rangeItemListCache=[], isAddRangeItemState=true, updateRangeItemIndex = null, validationAuthority=null, updatingSheetFile=null, firstInputSheetProtectionPassword = true;
 let sqrefMapCache = {}, inputRangeProtectionPassword = {}, initialRangePasswordHtml=false;
 
+/**
+ * Forget everything this module remembers about the previous table.
+ *
+ * These flags guard one-time setup: `isInitialProtection` says the modal markup is
+ * already appended to <body> and its handlers bound, so `openProtectionModal` skips
+ * building them again. That holds for the lifetime of a page — but not for the
+ * lifetime of a table. `destroy()` removes `.luckysheet-modal-dialog-slider`, which
+ * is exactly the protection modal, and unbinds `.luckysheetProtection`; the flag
+ * saying they exist survived both. Create a second table and Protect Sheet then
+ * shows nothing at all, because `$("#luckysheet-modal-dialog-slider-protection")`
+ * matches an element that was thrown away with the last one.
+ *
+ * `firstInputSheetProtectionPassword` is the same story with a different ending: it
+ * only returns to `true` when the protection dialog is confirmed, so cancelling it —
+ * or closing the table — leaves it stuck at `false`, and the next unprotect skips
+ * asking for the password at all.
+ *
+ * Called from `destroy()`, which is the moment both assumptions stop being true.
+ */
+export function resetProtectionState(){
+    isInitialProtection = false;
+    isInitialProtectionAddRang = false;
+    initialRangePasswordHtml = false;
+    firstInputSheetProtectionPassword = true;
+    isAddRangeItemState = true;
+    updateRangeItemIndex = null;
+    rangeItemListCache = [];
+    validationAuthority = null;
+    updatingSheetFile = null;
+    sqrefMapCache = {};
+    inputRangeProtectionPassword = {};
+}
+
 const authorityItemArr = [
     "selectLockedCells",
     "selectunLockedCells",

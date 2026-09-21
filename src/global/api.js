@@ -6885,12 +6885,21 @@ export function insertImageWithSizeAndOffset(src, options = {}) {
   const visibledatarow = Store.visibledatarow;
   const visibledatacolumn = Store.visibledatacolumn;
 
-  const topStart = rowIndex === 0 ? 0 : visibledatarow[rowIndex - 1];
-  const topEnd = visibledatarow[rowIndex];
+  // visibledatarow/-column are built zoomed (`round((len + 1) * zoomRatio)`) while
+  // `default.left/top` are kept unzoomed — imageCtrl divides by zoomRatio when a drag
+  // writes them and multiplies again when it paints. Scaling the track edges back down
+  // here keeps every value below in the unzoomed space the fields expect; without it an
+  // inserted image was stored at `zoom * left` and then painted at `zoom² * left`, so it
+  // sat correctly at 100% and drifted up-left at any other zoom (OPSWIZ-5663).
+  const zoomRatio = Number(Store.zoomRatio) || 1;
+  const unzoom = (value) => (value == null ? value : value / zoomRatio);
+
+  const topStart = rowIndex === 0 ? 0 : unzoom(visibledatarow[rowIndex - 1]);
+  const topEnd = unzoom(visibledatarow[rowIndex]);
   const cellHeight = topEnd - topStart;
 
-  const leftStart = colIndex === 0 ? 0 : visibledatacolumn[colIndex - 1];
-  const leftEnd = visibledatacolumn[colIndex];
+  const leftStart = colIndex === 0 ? 0 : unzoom(visibledatacolumn[colIndex - 1]);
+  const leftEnd = unzoom(visibledatacolumn[colIndex]);
   const cellWidth = leftEnd - leftStart;
 
   const image = new Image();

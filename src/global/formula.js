@@ -3599,6 +3599,23 @@ const luckysheetformula = {
 
                 if ($copy.attr("id") == "luckysheet-rich-text-editor") {
                     if ($copy.html().substr(0, 5) == "<span") {
+                        // Rich-text cell (ct.t === "inlineStr"): the editor holds the
+                        // runs as <span>s. This branch used to be empty — presumably to
+                        // avoid flattening those runs — which meant anything typed in
+                        // the formula bar never reached the editor, and the Enter that
+                        // follows commits the editor, so the edit was silently dropped
+                        // (OPSWIZ-5573). Typing inside the cell was unaffected, which is
+                        // why only the formula bar looked broken.
+                        //
+                        // Carry the text across, keeping the first run's style, the way
+                        // Excel collapses formatting when a rich-text cell is edited from
+                        // the formula bar. Losing per-run styling on an explicit edit
+                        // beats losing the edit.
+                        value = _this.ltGtSignDeal(value);
+                        let firstRunStyle = $copy.find("span").first().attr("style") || "";
+                        $copy.html(
+                            '<span index="0" style="' + firstRunStyle.replace(/"/g, "&quot;") + '">' + value + "</span>"
+                        );
                     } else {
                         value = _this.ltGtSignDeal(value);
                         $copy.html(value);

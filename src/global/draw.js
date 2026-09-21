@@ -1154,6 +1154,17 @@ function luckysheetDrawMain(
         );
     }
 
+    drawPrintArea(
+        sheetFile,
+        scrollWidth,
+        scrollHeight,
+        drawWidth,
+        drawHeight,
+        offsetLeft,
+        offsetTop,
+        luckysheetTableContent,
+    );
+
     luckysheetTableContent.restore();
 
     Store.measureTextCacheTimeOut = setTimeout(() => {
@@ -1161,6 +1172,88 @@ function luckysheetDrawMain(
         Store.measureTextCellInfoCache = {};
         Store.cellOverflowMapCache = {};
     }, 100);
+}
+
+/**
+ * "A2:J74" -> {r1, c1, r2, c2}, zero-based, or null if it is not a plain range.
+ * The `$` that Excel writes into a defined name is stripped; a sheet prefix is not
+ * handled because the print area is read off the sheet that owns it.
+ */
+function parseA1Range(ref) {
+    const m = /^\$?([A-Z]+)\$?(\d+):\$?([A-Z]+)\$?(\d+)$/i.exec(String(ref || "").trim());
+    if (!m) {
+        return null;
+    }
+
+    const col = (s) =>
+        s
+            .toUpperCase()
+            .split("")
+            .reduce((n, ch) => n * 26 + (ch.charCodeAt(0) - 64), 0) - 1;
+
+    return {
+        r1: Math.min(+m[2], +m[4]) - 1,
+        r2: Math.max(+m[2], +m[4]) - 1,
+        c1: Math.min(col(m[1]), col(m[3])),
+        c2: Math.max(col(m[1]), col(m[3])),
+    };
+}
+
+/**
+ * Outline the print area so it is visible while editing.
+ *
+ * A print area that opens on blank rows is invisible in the editor and expensive
+ * downstream: those rows still occupy the page, and on a fit-to-page sheet they
+ * come out of the same budget as the content. Finding that out today meant reading
+ * `xl/workbook.xml` by hand. Drawn here instead.
+ *
+ * `visibledatarow`/`visibledatacolumn` are cumulative *right/bottom* edges, so the
+ * near edge of a track is the previous entry — and 0 for the first one.
+ */
+function drawPrintArea(
+    sheetFile,
+    scrollWidth,
+    scrollHeight,
+    drawWidth,
+    drawHeight,
+    offsetLeft,
+    offsetTop,
+    ctx,
+) {
+    const area = parseA1Range(sheetFile && sheetFile.pageSetup && sheetFile.pageSetup.printArea);
+    if (!area) {
+        return;
+    }
+
+    const rows = Store.visibledatarow;
+    const cols = Store.visibledatacolumn;
+    if (!rows || !cols || !rows.length || !cols.length) {
+        return;
+    }
+
+    const r2 = Math.min(area.r2, rows.length - 1);
+    const c2 = Math.min(area.c2, cols.length - 1);
+    if (area.r1 > r2 || area.c1 > c2) {
+        return;
+    }
+
+    const top = (area.r1 === 0 ? 0 : rows[area.r1 - 1]) - scrollHeight + offsetTop;
+    const left = (area.c1 === 0 ? 0 : cols[area.c1 - 1]) - scrollWidth + offsetLeft;
+    const bottom = rows[r2] - scrollHeight + offsetTop;
+    const right = cols[c2] - scrollWidth + offsetLeft;
+
+    ctx.save();
+    // Keep the outline inside the grid; without this it runs over the headers when
+    // the sheet is scrolled past the start of the range.
+    ctx.beginPath();
+    ctx.rect(offsetLeft, offsetTop, drawWidth - offsetLeft, drawHeight - offsetTop);
+    ctx.clip();
+
+    ctx.strokeStyle = "#7d5fff";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 4]);
+    ctx.strokeRect(left, top, right - left, bottom - top);
+    ctx.restore();
 }
 
 //sparklines渲染

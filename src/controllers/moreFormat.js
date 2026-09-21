@@ -719,6 +719,13 @@ const luckysheetMoreFormat = {
             "name": "1,234.56",
             "value": "#,##0.00"
         },
+        // Three decimals *with* the thousands separator. The list had `0.000`
+        // but no grouped counterpart, so a quantity could have three decimals or
+        // a comma, never both — 12345.678 where the sheet wanted 12,345.678.
+        {
+            "name": "1,234.567",
+            "value": "#,##0.000"
+        },
         {
             "name": "1,235",
             "value": "#,##0_);(#,##0)"
@@ -734,6 +741,20 @@ const luckysheetMoreFormat = {
         {
             "name": "1,234.56",
             "value": "#,##0.00_);[Red](#,##0.00)"
+        },
+        // Same accounting look without the `_)` width reservation. `_` is the one
+        // token that does not survive a round trip: PhpSpreadsheet rewrites `_)`
+        // to a plain space when it generates an invoice, and Luckysheet trims that
+        // trailing space again on the next save — so a template built on the masks
+        // above renders differently before and after an edit. These two carry no
+        // `_`, so the mask is byte-identical at every hop.
+        {
+            "name": "1,235",
+            "value": "#,##0;[Red](#,##0)"
+        },
+        {
+            "name": "1,234.56",
+            "value": "#,##0.00;[Red](#,##0.00)"
         },
         {
             "name": "$1,235",
@@ -779,23 +800,11 @@ const luckysheetMoreFormat = {
             "name": "1234 14/25",
             "value": "# ??/??"
         },
-        {
-            "name": "$ 1,235",
-            "value": '_($* #,##0_);_(...($* "-"_);_(@_)'
-        },
-        {
-            "name": "1,235",
-            "value": '_(* #,##0_);_(*..._(* "-"_);_(@_)'
-        },
-        {
-            "name": "$ 1,234.56",
-            // "value": '_($* #,##0.00_)...* "-"??_);_(@_)'
-            "value": '_($* #,##0.00_);_(...($* "-"_);_(@_)'
-        },
-        {
-            "name": "1,234.56",
-            "value": '_(* #,##0.00_);...* "-"??_);_(@_)'
-        },
+        // The four Excel "Accounting" presets that sat here were removed. Their
+        // negative section had been replaced by a literal "..." — not valid mask
+        // syntax — so a negative rendered as 1234.50000 and a zero as "@": wrong
+        // numbers on a financial document. The "#,##0.00;[Red](#,##0.00)" entry
+        // above covers the same need and round-trips cleanly.
     ],
     createDialog: function(type){
         let _this = this;
@@ -987,6 +996,12 @@ const luckysheetMoreFormat = {
                 "name": "1,234.56",
                 "value": "#,##0.00"
             },
+            // Kept in step with the dead copy above — this is the list that is
+            // actually rendered, so an entry added only there would never show.
+            {
+                "name": "1,234.567",
+                "value": "#,##0.000"
+            },
             {
                 "name": "1,235",
                 "value": "#,##0_);(#,##0)"
@@ -1002,6 +1017,20 @@ const luckysheetMoreFormat = {
             {
                 "name": "1,234.56",
                 "value": "#,##0.00_);[Red](#,##0.00)"
+            },
+            // Same accounting look without the `_)` width reservation. `_` is the
+            // one token that does not survive a round trip: PhpSpreadsheet rewrites
+            // `_)` to a plain space when it generates an invoice, and Luckysheet
+            // trims that trailing space again on the next save — so a template built
+            // on the masks above renders differently before and after an edit. These
+            // two carry no `_`, so the mask is byte-identical at every hop.
+            {
+                "name": "1,235",
+                "value": "#,##0;[Red](#,##0)"
+            },
+            {
+                "name": "1,234.56",
+                "value": "#,##0.00;[Red](#,##0.00)"
             },
             {
                 "name": "$1,235",
@@ -1047,23 +1076,11 @@ const luckysheetMoreFormat = {
                 "name": "1234 14/25",
                 "value": "# ??/??"
             },
-            {
-                "name": "$ 1,235",
-                "value": '_($* #,##0_);_(...($* "-"_);_(@_)'
-            },
-            {
-                "name": "1,235",
-                "value": '_(* #,##0_);_(*..._(* "-"_);_(@_)'
-            },
-            {
-                "name": "$ 1,234.56",
-                // "value": '_($* #,##0.00_)...* "-"??_);_(@_)'
-                "value": '_($* #,##0.00_);_(...($* "-"_);_(@_)'
-            },
-            {
-                "name": "1,234.56",
-                "value": '_(* #,##0.00_);...* "-"??_);_(@_)'
-            },
+            // The four Excel "Accounting" presets that sat here were removed. Their
+            // negative section had been replaced by a literal "..." — not valid mask
+            // syntax — so a negative rendered as 1234.50000 and a zero as "@": wrong
+            // numbers on a financial document. The "#,##0.00;[Red](#,##0.00)" entry
+            // above covers the same need and round-trips cleanly.
         ]    
 
         $("#luckysheet-modal-dialog-mask").show();

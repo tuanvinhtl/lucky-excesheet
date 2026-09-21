@@ -5,7 +5,8 @@ import { checkProtectionLockedRangeList } from "./protection";
 import editor from "../global/editor";
 import tooltip from "../global/tooltip";
 import formula from "../global/formula";
-import { getBorderInfoCompute } from "../global/border";
+import { getBorderInfoCompute, getBorderInfoComputeTraced } from "../global/border";
+import { borderInfoAfterMove, createBorderTrace } from "../global/moveBorders";
 import { getdatabyselection, getcellvalue, datagridgrowth } from "../global/getdata";
 import { rowlenByRange } from "../global/getRowlen";
 import { isEditMode, hasPartMC, isRealNum } from "../global/validate";
@@ -984,7 +985,17 @@ const selection = {
             d = datagridgrowth([].concat(d), addr, addc, true);
         }
 
-        let borderInfoCompute = getBorderInfoCompute(copySheetIndex);
+        // Which side is whose, for the borders of the move below (moveBorders.js): on the sheet
+        // cut from, both areas when the paste stays on it and the cut area alone when it does not.
+        let cutArea = { row: [c_r1, c_r2], column: [c_c1, c_c2] };
+        let pasteArea = { row: [minh, maxh], column: [minc, maxc] };
+        let bordersTrace = createBorderTrace(
+            Store.currentSheetIndex == copySheetIndex ? [cutArea, pasteArea] : [cutArea],
+            cutArea,
+        );
+        getBorderInfoComputeTraced(copySheetIndex, bordersTrace);
+        // The sides each cut cell takes with it: its own, not copies of its neighbours'.
+        let borderInfoCompute = bordersTrace.carried;
         let c_dataVerification = $.extend(
             true,
             {},
@@ -1016,42 +1027,18 @@ const selection = {
             }
 
             //边框
-            if (cfg["borderInfo"] && cfg["borderInfo"].length > 0) {
-                let source_borderInfo = [];
+            // The cut cells take their borders with them and every other cell keeps its own
+            // (FELCOR-139): cutting each range command around them, as this did, redrew an
+            // "outside" as the outline of every piece. The cells landing get their sides below.
+            cfg["borderInfo"] = borderInfoAfterMove(cfg["borderInfo"], bordersTrace, [cutArea, pasteArea], d.length, d[0].length);
+        }
 
-                for (let i = 0; i < cfg["borderInfo"].length; i++) {
-                    let bd_rangeType = cfg["borderInfo"][i].rangeType;
-
-                    if (bd_rangeType == "range") {
-                        let bd_range = cfg["borderInfo"][i].range;
-                        let bd_emptyRange = [];
-
-                        for (let j = 0; j < bd_range.length; j++) {
-                            bd_emptyRange = bd_emptyRange.concat(
-                                conditionformat.CFSplitRange(
-                                    bd_range[j],
-                                    { row: [c_r1, c_r2], column: [c_c1, c_c2] },
-                                    { row: [minh, maxh], column: [minc, maxc] },
-                                    "restPart",
-                                ),
-                            );
-                        }
-
-                        cfg["borderInfo"][i].range = bd_emptyRange;
-
-                        source_borderInfo.push(cfg["borderInfo"][i]);
-                    } else if (bd_rangeType == "cell") {
-                        let bd_r = cfg["borderInfo"][i].value.row_index;
-                        let bd_c = cfg["borderInfo"][i].value.col_index;
-
-                        if (!(bd_r >= c_r1 && bd_r <= c_r2 && bd_c >= c_c1 && bd_c <= c_c2)) {
-                            source_borderInfo.push(cfg["borderInfo"][i]);
-                        }
-                    }
-                }
-
-                cfg["borderInfo"] = source_borderInfo;
-            }
+        // Pasting into another sheet: the cells landing here start from nothing, and every
+        // cell around them keeps its own sides (FELCOR-139).
+        if (Store.currentSheetIndex != copySheetIndex) {
+            let pasteTrace = createBorderTrace([pasteArea], null);
+            getBorderInfoComputeTraced(Store.currentSheetIndex, pasteTrace);
+            cfg["borderInfo"] = borderInfoAfterMove(cfg["borderInfo"], pasteTrace, [pasteArea], d.length, d[0].length);
         }
 
         let offsetMC = {};
@@ -1069,24 +1056,6 @@ const selection = {
                             r: borderInfoCompute[c_r1 + h - minh + "_" + (c_c1 + c - minc)].r,
                             t: borderInfoCompute[c_r1 + h - minh + "_" + (c_c1 + c - minc)].t,
                             b: borderInfoCompute[c_r1 + h - minh + "_" + (c_c1 + c - minc)].b,
-                        },
-                    };
-
-                    if (cfg["borderInfo"] == null) {
-                        cfg["borderInfo"] = [];
-                    }
-
-                    cfg["borderInfo"].push(bd_obj);
-                } else if (borderInfoCompute[h + "_" + c]) {
-                    let bd_obj = {
-                        rangeType: "cell",
-                        value: {
-                            row_index: h,
-                            col_index: c,
-                            l: null,
-                            r: null,
-                            t: null,
-                            b: null,
                         },
                     };
 
@@ -1182,42 +1151,15 @@ const selection = {
             }
 
             //边框
-            if (sourceCurConfig["borderInfo"] && sourceCurConfig["borderInfo"].length > 0) {
-                let source_borderInfo = [];
-
-                for (let i = 0; i < sourceCurConfig["borderInfo"].length; i++) {
-                    let bd_rangeType = sourceCurConfig["borderInfo"][i].rangeType;
-
-                    if (bd_rangeType == "range") {
-                        let bd_range = sourceCurConfig["borderInfo"][i].range;
-                        let bd_emptyRange = [];
-
-                        for (let j = 0; j < bd_range.length; j++) {
-                            bd_emptyRange = bd_emptyRange.concat(
-                                conditionformat.CFSplitRange(
-                                    bd_range[j],
-                                    { row: [c_r1, c_r2], column: [c_c1, c_c2] },
-                                    { row: [minh, maxh], column: [minc, maxc] },
-                                    "restPart",
-                                ),
-                            );
-                        }
-
-                        sourceCurConfig["borderInfo"][i].range = bd_emptyRange;
-
-                        source_borderInfo.push(sourceCurConfig["borderInfo"][i]);
-                    } else if (bd_rangeType == "cell") {
-                        let bd_r = sourceCurConfig["borderInfo"][i].value.row_index;
-                        let bd_c = sourceCurConfig["borderInfo"][i].value.col_index;
-
-                        if (!(bd_r >= c_r1 && bd_r <= c_r2 && bd_c >= c_c1 && bd_c <= c_c2)) {
-                            source_borderInfo.push(sourceCurConfig["borderInfo"][i]);
-                        }
-                    }
-                }
-
-                sourceCurConfig["borderInfo"] = source_borderInfo;
-            }
+            // The cut cells take their borders with them and every other cell keeps its own
+            // (FELCOR-139).
+            sourceCurConfig["borderInfo"] = borderInfoAfterMove(
+                sourceCurConfig["borderInfo"],
+                bordersTrace,
+                [cutArea],
+                sourceCurData.length,
+                sourceCurData[0].length,
+            );
 
             //条件格式
             let source_cdformat = $.extend(

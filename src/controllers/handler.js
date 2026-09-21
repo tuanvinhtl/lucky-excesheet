@@ -63,7 +63,8 @@ import tooltip from "../global/tooltip";
 import editor from "../global/editor";
 import { genarate, update } from "../global/format";
 import method from "../global/method";
-import { getBorderInfoCompute } from "../global/border";
+import { getBorderInfoComputeTraced } from "../global/border";
+import { borderInfoAfterMove, createBorderTrace } from "../global/moveBorders";
 import { luckysheetDrawMain } from "../global/draw";
 import locale from "../locale/locale";
 import Store from "../store";
@@ -4490,7 +4491,15 @@ export default function luckysheetHandler() {
                 return;
             }
 
-            let borderInfoCompute = getBorderInfoCompute(Store.currentSheetIndex);
+            // Which side is whose, for the borders of the move below (moveBorders.js).
+            let moveAreas = [
+                { row: [last["row"][0], last["row"][1]], column: [last["column"][0], last["column"][1]] },
+                { row: [row_s, row_e], column: [col_s, col_e] },
+            ];
+            let bordersTrace = createBorderTrace(moveAreas, moveAreas[0]);
+            getBorderInfoComputeTraced(Store.currentSheetIndex, bordersTrace);
+            // The sides each moved cell takes with it: its own, not copies of its neighbours'.
+            let borderInfoCompute = bordersTrace.carried;
 
             //删除原本位置的数据
             let RowlChange = null;
@@ -4513,49 +4522,11 @@ export default function luckysheetHandler() {
             }
 
             //边框
-            if (cfg["borderInfo"] && cfg["borderInfo"].length > 0) {
-                let borderInfo = [];
-
-                for (let i = 0; i < cfg["borderInfo"].length; i++) {
-                    let bd_rangeType = cfg["borderInfo"][i].rangeType;
-
-                    if (bd_rangeType == "range") {
-                        let bd_range = cfg["borderInfo"][i].range;
-                        let bd_emptyRange = [];
-
-                        for (let j = 0; j < bd_range.length; j++) {
-                            bd_emptyRange = bd_emptyRange.concat(
-                                conditionformat.CFSplitRange(
-                                    bd_range[j],
-                                    { row: last["row"], column: last["column"] },
-                                    { row: [row_s, row_e], column: [col_s, col_e] },
-                                    "restPart",
-                                ),
-                            );
-                        }
-
-                        cfg["borderInfo"][i].range = bd_emptyRange;
-
-                        borderInfo.push(cfg["borderInfo"][i]);
-                    } else if (bd_rangeType == "cell") {
-                        let bd_r = cfg["borderInfo"][i].value.row_index;
-                        let bd_c = cfg["borderInfo"][i].value.col_index;
-
-                        if (
-                            !(
-                                bd_r >= last["row"][0] &&
-                                bd_r <= last["row"][1] &&
-                                bd_c >= last["column"][0] &&
-                                bd_c <= last["column"][1]
-                            )
-                        ) {
-                            borderInfo.push(cfg["borderInfo"][i]);
-                        }
-                    }
-                }
-
-                cfg["borderInfo"] = borderInfo;
-            }
+            // The moved cells take their borders with them and every other cell keeps its own
+            // (FELCOR-139). Cutting each range command around the cells that left, as this
+            // did, redrew an "outside" as the outline of every piece — new lines across a box
+            // whose moved cells had none. The cells landing are given their sides below.
+            cfg["borderInfo"] = borderInfoAfterMove(cfg["borderInfo"], bordersTrace, moveAreas, d.length, d[0].length);
             //替换位置数据更新
             let offsetMC = {};
             for (let r = 0; r < data.length; r++) {
