@@ -3,8 +3,9 @@ import { getObjType } from '../utils/util';
 import Store from '../store';
 
 //获取表格边框数据计算值
-function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,dataset_col_ed,sheetIndex) {
-    let borderInfoCompute = {};
+//trace: optional, from moveBorders.js createBorderTrace — records which cell each side came from
+function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,dataset_col_ed,sheetIndex,trace) {
+    let borderInfoCompute = trace ? trace.wrap({}) : {};
 
     let cfg, data; 
     if(sheetIndex == null){
@@ -16,10 +17,19 @@ function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,
         data = Store.luckysheetfile[getSheetIndex(sheetIndex)].data;
     }
 
+    // A traced replay counts hidden rows too: a border kept on a hidden row draws again once the
+    // row is shown, so a move has to know about it.
+    if (trace) {
+        cfg = Object.assign({}, cfg, { rowhidden: null });
+    }
+
     let borderInfo = cfg["borderInfo"];
 
     if(borderInfo != null && borderInfo.length > 0){
         for(let i = 0; i < borderInfo.length; i++){
+            if (trace) {
+                trace.command(borderInfo[i]);
+            }
             let rangeType = borderInfo[i].rangeType;
 
             if(rangeType == "range"){
@@ -1098,7 +1108,16 @@ function getBorderInfoCompute(sheetIndex) {
     return borderInfoCompute;
 }
 
+//获取表格边框数据计算值，并记录每条边框的来源（移动单元格用）
+// The same as getBorderInfoCompute, replayed through a trace (moveBorders.js createBorderTrace).
+function getBorderInfoComputeTraced(sheetIndex, trace) {
+    let data = sheetIndex == null ? Store.flowdata : Store.luckysheetfile[getSheetIndex(sheetIndex)].data;
+
+    return getBorderInfoComputeRange(0, data.length, 0, data[0].length, sheetIndex, trace);
+}
+
 export {
     getBorderInfoCompute,
-    getBorderInfoComputeRange
+    getBorderInfoComputeRange,
+    getBorderInfoComputeTraced
 }

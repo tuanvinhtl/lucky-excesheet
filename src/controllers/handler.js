@@ -63,8 +63,8 @@ import tooltip from "../global/tooltip";
 import editor from "../global/editor";
 import { genarate, update } from "../global/format";
 import method from "../global/method";
-import { getBorderInfoCompute } from "../global/border";
-import { borderInfoAfterMove } from "../global/moveBorders";
+import { getBorderInfoComputeTraced } from "../global/border";
+import { borderInfoAfterMove, createBorderTrace } from "../global/moveBorders";
 import { luckysheetDrawMain } from "../global/draw";
 import locale from "../locale/locale";
 import Store from "../store";
@@ -4491,7 +4491,15 @@ export default function luckysheetHandler() {
                 return;
             }
 
-            let borderInfoCompute = getBorderInfoCompute(Store.currentSheetIndex);
+            // Which side is whose, for the borders of the move below (moveBorders.js).
+            let moveAreas = [
+                { row: [last["row"][0], last["row"][1]], column: [last["column"][0], last["column"][1]] },
+                { row: [row_s, row_e], column: [col_s, col_e] },
+            ];
+            let bordersTrace = createBorderTrace(moveAreas, moveAreas[0]);
+            getBorderInfoComputeTraced(Store.currentSheetIndex, bordersTrace);
+            // The sides each moved cell takes with it: its own, not copies of its neighbours'.
+            let borderInfoCompute = bordersTrace.carried;
 
             //删除原本位置的数据
             let RowlChange = null;
@@ -4518,16 +4526,7 @@ export default function luckysheetHandler() {
             // (FELCOR-139). Cutting each range command around the cells that left, as this
             // did, redrew an "outside" as the outline of every piece — new lines across a box
             // whose moved cells had none. The cells landing are given their sides below.
-            cfg["borderInfo"] = borderInfoAfterMove(
-                cfg["borderInfo"],
-                borderInfoCompute,
-                [
-                    { row: last["row"], column: last["column"] },
-                    { row: [row_s, row_e], column: [col_s, col_e] },
-                ],
-                d.length,
-                d[0].length,
-            );
+            cfg["borderInfo"] = borderInfoAfterMove(cfg["borderInfo"], bordersTrace, moveAreas, d.length, d[0].length);
             //替换位置数据更新
             let offsetMC = {};
             for (let r = 0; r < data.length; r++) {

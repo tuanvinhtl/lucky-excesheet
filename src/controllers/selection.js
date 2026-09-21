@@ -5,8 +5,8 @@ import { checkProtectionLockedRangeList } from "./protection";
 import editor from "../global/editor";
 import tooltip from "../global/tooltip";
 import formula from "../global/formula";
-import { getBorderInfoCompute } from "../global/border";
-import { borderInfoAfterMove } from "../global/moveBorders";
+import { getBorderInfoCompute, getBorderInfoComputeTraced } from "../global/border";
+import { borderInfoAfterMove, createBorderTrace } from "../global/moveBorders";
 import { getdatabyselection, getcellvalue, datagridgrowth } from "../global/getdata";
 import { rowlenByRange } from "../global/getRowlen";
 import { isEditMode, hasPartMC, isRealNum } from "../global/validate";
@@ -985,7 +985,17 @@ const selection = {
             d = datagridgrowth([].concat(d), addr, addc, true);
         }
 
-        let borderInfoCompute = getBorderInfoCompute(copySheetIndex);
+        // Which side is whose, for the borders of the move below (moveBorders.js): on the sheet
+        // cut from, both areas when the paste stays on it and the cut area alone when it does not.
+        let cutArea = { row: [c_r1, c_r2], column: [c_c1, c_c2] };
+        let pasteArea = { row: [minh, maxh], column: [minc, maxc] };
+        let bordersTrace = createBorderTrace(
+            Store.currentSheetIndex == copySheetIndex ? [cutArea, pasteArea] : [cutArea],
+            cutArea,
+        );
+        getBorderInfoComputeTraced(copySheetIndex, bordersTrace);
+        // The sides each cut cell takes with it: its own, not copies of its neighbours'.
+        let borderInfoCompute = bordersTrace.carried;
         let c_dataVerification = $.extend(
             true,
             {},
@@ -1020,28 +1030,15 @@ const selection = {
             // The cut cells take their borders with them and every other cell keeps its own
             // (FELCOR-139): cutting each range command around them, as this did, redrew an
             // "outside" as the outline of every piece. The cells landing get their sides below.
-            cfg["borderInfo"] = borderInfoAfterMove(
-                cfg["borderInfo"],
-                borderInfoCompute,
-                [
-                    { row: [c_r1, c_r2], column: [c_c1, c_c2] },
-                    { row: [minh, maxh], column: [minc, maxc] },
-                ],
-                d.length,
-                d[0].length,
-            );
+            cfg["borderInfo"] = borderInfoAfterMove(cfg["borderInfo"], bordersTrace, [cutArea, pasteArea], d.length, d[0].length);
         }
 
         // Pasting into another sheet: the cells landing here start from nothing, and every
         // cell around them keeps its own sides (FELCOR-139).
         if (Store.currentSheetIndex != copySheetIndex) {
-            cfg["borderInfo"] = borderInfoAfterMove(
-                cfg["borderInfo"],
-                getBorderInfoCompute(Store.currentSheetIndex),
-                [{ row: [minh, maxh], column: [minc, maxc] }],
-                d.length,
-                d[0].length,
-            );
+            let pasteTrace = createBorderTrace([pasteArea], null);
+            getBorderInfoComputeTraced(Store.currentSheetIndex, pasteTrace);
+            cfg["borderInfo"] = borderInfoAfterMove(cfg["borderInfo"], pasteTrace, [pasteArea], d.length, d[0].length);
         }
 
         let offsetMC = {};
@@ -1158,8 +1155,8 @@ const selection = {
             // (FELCOR-139).
             sourceCurConfig["borderInfo"] = borderInfoAfterMove(
                 sourceCurConfig["borderInfo"],
-                borderInfoCompute,
-                [{ row: [c_r1, c_r2], column: [c_c1, c_c2] }],
+                bordersTrace,
+                [cutArea],
                 sourceCurData.length,
                 sourceCurData[0].length,
             );
