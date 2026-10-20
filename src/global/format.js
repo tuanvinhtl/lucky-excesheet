@@ -1764,9 +1764,12 @@ export function genarate(value) {//万 单位格式增加！！！
         return null;
     }
 
-    if (/^-?[0-9]{1,}[,][0-9]{3}(.[0-9]{1,2})?$/.test(value)) { // 表述金额的字符串，如：12,000.00 或者 -12,000.00
+    if (/^-?[0-9]{1,}(,[0-9]{3})+(\.[0-9]{1,2})?$/.test(value)) { // 表述金额的字符串，如：12,000.00 或者 -12,000.00
         m = value
-        v = Number(value.split('.')[0].replace(',', ''))
+        // Keep the decimals and strip every separator: "15,812.91" is 15812.91,
+        // not 15812. m still shows the cents, so a truncated v went unnoticed
+        // until something printed the value (Save, the PDF).
+        v = Number(value.replace(/,/g, ''))
         let fa = "#,##0"
         if (value.split('.')[1]) {
             fa = "#,##0."

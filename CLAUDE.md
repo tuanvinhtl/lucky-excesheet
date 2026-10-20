@@ -18,7 +18,7 @@ npm run prettier       # check formatting
 npm run prettier:fix   # fix formatting
 ```
 
-There are no tests. Commits follow conventional-commit format (commitlint enforced; `npm run commit` runs commitizen).
+There is no test suite. The one regression check, `node tools/check-genarate.js`, bundles `genarate()` from `src/global/format.js` and `setcellvalue()` / `maskWidenedToTypedDecimals()` from `src/global/setdata.js` with esbuild, and asserts what a typed amount like `15,812.91` or `8163100.00` turns into under a cell's mask. Commits follow conventional-commit format (commitlint enforced; `npm run commit` runs commitizen).
 
 ## Build pipeline (gulpfile.js)
 

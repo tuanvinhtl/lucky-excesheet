@@ -13,7 +13,7 @@ import { isRealNum, isRealNull, valueIsError, isEditMode } from "./validate";
 import { isdatetime, isdatatype } from "./datecontroll";
 import { getCellTextSplitArr, getCellTextInfo } from "../global/getRowlen";
 import { getcellvalue, getcellFormula, getInlineStringNoStyle, getOrigincell } from "./getdata";
-import { setcellvalue } from "./setdata";
+import { setcellvalue, maskWidenedToTypedDecimals } from "./setdata";
 import { genarate, valueShowEs } from "./format";
 import editor from "./editor";
 import tooltip from "./tooltip";
@@ -1399,7 +1399,12 @@ const luckysheetformula = {
                     return;
                 }
             } else if (curv != null && curv.qp != 1) {
-                if (getObjType(curv) == "object" && (value == curv.f || value == curv.v || value == curv.m)) {
+                // `==` makes "8163100.00" equal to 8163100, so an edit that only adds
+                // decimals the mask does not show was dropped here as "unchanged",
+                // before the mask could be widened to them below.
+                const widensMask = getObjType(curv) == "object" && curv.ct != null
+                    && maskWidenedToTypedDecimals(curv.ct.fa, value) != null;
+                if (getObjType(curv) == "object" && !widensMask && (value == curv.f || value == curv.v || value == curv.m)) {
                     _this.cancelNormalSelected();
                     return;
                 } else if (value == curv) {
@@ -1550,6 +1555,14 @@ const luckysheetformula = {
                             curv.ct.fa = "General";
                             curv.ct.t = "n";
                         }
+                    }
+
+                    // Typed decimals beyond what the mask shows widen the mask, so
+                    // "8163100.00" into "#,##0" shows 8,163,100.00 — see
+                    // maskWidenedToTypedDecimals() in setdata.js.
+                    const widened = curv.ct != null ? maskWidenedToTypedDecimals(curv.ct.fa, value) : null;
+                    if (widened != null) {
+                        curv.ct = { fa: widened, t: "n" };
                     }
                 }
             }
