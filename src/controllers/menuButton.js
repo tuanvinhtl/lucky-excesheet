@@ -573,16 +573,22 @@ const menuButton = {
                         luckysheetMoreFormat.createDialog(itemvalue);
                         luckysheetMoreFormat.init();
                     });
-            } else {
-                const text = $(this)
-                    .find(".luckysheet-toolbar-menu-button-caption")
-                    .text()
-                    .trim();
-                const format = locale_defaultFmt.find((f) => f.text === text);
-                if (format) {
-                    _this.focus($menuButton, format.value);
-                }
             }
+
+            // Tick what the selected cell actually carries: its preset, "Custom formats"
+            // for any other mask, Automatic when it has none. Matching the caption text
+            // against the preset names stopped working once a custom mask is shown by
+            // its sample ("1,234.56"), and the first open always ticked Automatic.
+            const last = Store.luckysheet_select_save[Store.luckysheet_select_save.length - 1];
+            let cellFa = null;
+            if (last != null) {
+                const r = last.row_focus == null ? last.row[0] : last.row_focus;
+                const c = last.column_focus == null ? last.column[0] : last.column_focus;
+                const ct = _this.checkstatus(Store.flowdata, r, c, "ct");
+                cellFa = ct == null ? null : ct.fa;
+            }
+            const preset = locale_defaultFmt.find((f) => f.value === cellFa);
+            _this.focus($menuButton, cellFa == null ? "General" : preset ? preset.value : "fmtOtherSelf");
 
             let userlen = $(this).outerWidth();
             let tlen = $menuButton.outerWidth();
@@ -4419,15 +4425,35 @@ const menuButton = {
             const locale_defaultFmt = _locale.defaultFmt;
             if (!foucsStatus) {
                 $menuButton.find(".luckysheet-toolbar-menu-button-caption").html(" " + locale_defaultFmt[0].text + " ");
+                $menuButton.data("tips", _locale.toolbar.moreFormats);
                 return;
             }
             const { fa } = foucsStatus;
             const format = locale_defaultFmt.find((f) => f.value === fa);
             if (format) {
                 $menuButton.find(".luckysheet-toolbar-menu-button-caption").html(" " + format.text + " ");
+                $menuButton.data("tips", _locale.toolbar.moreFormats);
             } else {
-                const otherFormat = locale_defaultFmt.find((f) => f.value === "fmtOtherSelf");
-                $menuButton.find(".luckysheet-toolbar-menu-button-caption").html(" " + otherFormat.text + " ");
+                // Not one of the presets above, so name it by what it does to a sample
+                // number — "0" → 1235, "0.0" → 1234.6, "#,##0.00" → 1,234.56, the names
+                // the "More formats" dialog lists — instead of a bare "Custom formats":
+                // which decimals and separator a cell carries is what an invoice editor
+                // needs to see. The format code itself goes in the button's hover tip.
+                let label = fa;
+                if (fa != null && /[0#]/.test(fa) && fa.indexOf("@") === -1 && !is_date(fa)) {
+                    try {
+                        label = update(fa, 1234.56);
+                    } catch (e) {
+                        label = fa;
+                    }
+                }
+                if (label == null || String(label).trim() === "") {
+                    label = locale_defaultFmt.find((f) => f.value === "fmtOtherSelf").text;
+                }
+                $menuButton.find(".luckysheet-toolbar-menu-button-caption").text(" " + label + " ");
+                // The hover tip is rendered as HTML.
+                const code = String(fa).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                $menuButton.data("tips", _locale.toolbar.moreFormats + ": " + code);
             }
         }
     },
