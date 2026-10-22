@@ -22,7 +22,7 @@ function hasExplicitNumberFormat(cell) {
 // let whatever was typed decide the decimals. "8,163,100" (an amount saved as
 // text) under "0.00" became "#,##0" on load (invoice b92ed772, I49), and a typed
 // "5.00" could just as well turn a 0dp cell into 2dp. The template's mask decides
-// how many decimals a cell shows — 0, 1 or 2 — and typing never changes that;
+// how many decimals a cell shows — 0 to 3 — and typing never changes that;
 // only the toolbar does. So keep the mask and add just the separator the user
 // typed: "0.00" → "#,##0.00", "0" → "#,##0", every section, so "0.00;[Red](0.00)"
 // keeps its colour — the same rule as the app's repairMoneyTextCells(). The value
@@ -38,6 +38,23 @@ function maskWithThousandsSeparator(fa, inferred) {
 
     const kept = fa.indexOf(",") > -1 ? fa : fa.replace(/[#0]*0(?=\.0)|^[#0]*0$/g, "#,##0");
     return kept.indexOf(",") > -1 ? kept : null;
+}
+
+// Typing into a quote-prefixed cell clears the prefix, and formula.updatecell()
+// used to reset the format to "General" while doing so. That only touched its
+// working copy: the cell itself kept qp = 1, and qp with "General" reads as text
+// above, so the edit came out as "@" holding exactly what was typed — any
+// decimals, no separator. A 3dp quantity like "[[$display_all.bl_quantity]]"
+// (1,045.278 arrives as xlsx text) took whatever dp the user typed, while the 0dp
+// formula totals under it kept their mask (OPSWIZ-5907). A cell with its own
+// number mask keeps it, so the mask decides the decimals there too; a text or
+// General cell still falls back to General.
+function dropQuotePrefix(cell) {
+    cell.qp = 0;
+    if (cell.ct != null && !hasExplicitNumberFormat(cell)) {
+        cell.ct.fa = "General";
+        cell.ct.t = "n";
+    }
 }
 
 //Set cell value
@@ -322,4 +339,4 @@ function setAccuracy(autoFormatw, accuracy) {
     return fmt.toString();
 }
 
-export { setcellvalue, setAccuracy };
+export { setcellvalue, setAccuracy, dropQuotePrefix };

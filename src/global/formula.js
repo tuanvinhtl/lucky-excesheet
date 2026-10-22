@@ -13,7 +13,7 @@ import { isRealNum, isRealNull, valueIsError, isEditMode } from "./validate";
 import { isdatetime, isdatatype } from "./datecontroll";
 import { getCellTextSplitArr, getCellTextInfo } from "../global/getRowlen";
 import { getcellvalue, getcellFormula, getInlineStringNoStyle, getOrigincell } from "./getdata";
-import { setcellvalue } from "./setdata";
+import { setcellvalue, dropQuotePrefix } from "./setdata";
 import { genarate, valueShowEs } from "./format";
 import editor from "./editor";
 import tooltip from "./tooltip";
@@ -1545,11 +1545,7 @@ const luckysheetformula = {
 
                     if (curv.qp == 1 && ("" + value).substr(0, 1) != "'") {
                         //if quotePrefix is 1, cell is force string, cell clear quotePrefix when it is updated
-                        curv.qp = 0;
-                        if (curv.ct != null) {
-                            curv.ct.fa = "General";
-                            curv.ct.t = "n";
-                        }
+                        dropQuotePrefix(curv);
                     }
                 }
             }

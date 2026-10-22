@@ -18,7 +18,7 @@ npm run prettier       # check formatting
 npm run prettier:fix   # fix formatting
 ```
 
-There is no test suite. The one regression check, `node tools/check-genarate.js`, bundles `genarate()` from `src/global/format.js` and `setcellvalue()` from `src/global/setdata.js` with esbuild, and asserts what a typed amount like `15,812.91` turns into under a cell's mask — the mask always keeps its own 0, 1 or 2 decimals. Commits follow conventional-commit format (commitlint enforced; `npm run commit` runs commitizen).
+There is no test suite. The one regression check, `node tools/check-genarate.js`, bundles `genarate()` from `src/global/format.js` and `setcellvalue()` from `src/global/setdata.js` with esbuild, and asserts what a typed amount like `15,812.91` turns into under a cell's mask — the mask always keeps its own 0, 1, 2 or 3 decimals, quote-prefixed xlsx cells included. Commits follow conventional-commit format (commitlint enforced; `npm run commit` runs commitizen).
 
 ## Build pipeline (gulpfile.js)
 
