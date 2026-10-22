@@ -13,6 +13,23 @@ function execScroll(){
     scrollRequestAnimationFrame = window.requestAnimationFrame(execScroll);
 }
 
+// Put #luckysheet-cell-main and the row/column headers back on the scrollbars' position,
+// which is what the canvas was drawn from. luckysheetscrollevent() below is meant to be the
+// only thing that scrolls them, but anything else that moves them (browser scroll anchoring,
+// see constant.js) leaves clicks and the selection box a row or more off the drawn grid until
+// the next scroll. A hit-test reads cell-main's scrollTop, so it re-aligns first.
+export function syncCellMainToScrollbars() {
+    let scrollLeft = $("#luckysheet-scrollbar-x").scrollLeft(),
+        scrollTop = $("#luckysheet-scrollbar-y").scrollTop();
+    let $main = $("#luckysheet-cell-main");
+
+    if ($main.scrollLeft() !== scrollLeft || $main.scrollTop() !== scrollTop) {
+        $main.scrollLeft(scrollLeft).scrollTop(scrollTop);
+        $("#luckysheet-cols-h-c").scrollLeft(scrollLeft);
+        $("#luckysheet-rows-h").scrollTop(scrollTop);
+    }
+}
+
 //全局滚动事件
 export default function luckysheetscrollevent(isadjust) {
     let $t = $("#luckysheet-cell-main");

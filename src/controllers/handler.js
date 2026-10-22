@@ -56,7 +56,7 @@ import { countfunc } from "../global/count";
 import browser from "../global/browser";
 import formula from "../global/formula";
 import { luckysheetextendtable } from "../global/extend";
-import luckysheetscrollevent from "../global/scroll";
+import luckysheetscrollevent, { syncCellMainToScrollbars } from "../global/scroll";
 import { jfrefreshgrid, jfrefreshgrid_rhcw, luckysheetrefreshgrid } from "../global/refresh";
 import { getdatabyselection, datagridgrowth } from "../global/getdata";
 import tooltip from "../global/tooltip";
@@ -309,6 +309,8 @@ export default function luckysheetHandler() {
             }
 
             //luckysheetautoadjustmousedown = 1;
+            // The hit-test below reads cell-main's scroll; make sure it is the drawn grid's.
+            syncCellMainToScrollbars();
             let mouse = mouseposition(event.pageX, event.pageY);
             if (
                 mouse[0] >= Store.cellmainWidth - Store.cellMainSrollBarSize ||
@@ -1573,6 +1575,7 @@ export default function luckysheetHandler() {
                 return;
             }
 
+            syncCellMainToScrollbars();
             let mouse = mouseposition(event.pageX, event.pageY);
             if (
                 mouse[0] >= Store.cellmainWidth - Store.cellMainSrollBarSize ||

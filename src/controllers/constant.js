@@ -5,6 +5,13 @@ import { getObjType } from "../utils/util";
 import { createToolbarHtml } from "./toolbar";
 const { v4: uuidv4 } = require('uuid');
 //dom variable
+// #luckysheet-cell-main, #luckysheet-rows-h and #luckysheet-cols-h-c carry an inline
+// `overflow-anchor: none`. They are scrolled only by luckysheetscrollevent(), which copies
+// the scrollbars' position onto them; the canvas is drawn from the scrollbars. With the
+// browser's default scroll anchoring, a layout change inside them moved their scrollTop
+// on its own, and from then on clicks and the selection box sat a row away from the
+// drawn grid until the next scroll. Inline, because the app ships this bundle without
+// the fork's luckysheet.css.
 const gridHTML = function() {
     const _locale = locale();
     const locale_info = _locale.info;
@@ -102,7 +109,7 @@ const gridHTML = function() {
                                                 <div class="luckysheet-left-top" id="luckysheet-left-top"> </div> 
                                             </td> 
                                             <td valign="top" class="luckysheet-paneswrapper"> 
-                                                <div id="luckysheet-cols-h-c" class="luckysheet-cols-h-c">
+                                                <div id="luckysheet-cols-h-c" class="luckysheet-cols-h-c" style="overflow-anchor: none;">
                                                     <div class="luckysheet-cols-change-size" id="luckysheet-cols-change-size"></div>  
                                                     <div class="luckysheet-cols-menu-btn luckysheet-mousedown-cancel" id="luckysheet-cols-menu-btn"><i class="fa fa-caret-down luckysheet-mousedown-cancel" aria-hidden="true"></i></div>  
                                                     <div class="luckysheet-cols-h-hover" id="luckysheet-cols-h-hover"></div>  
@@ -114,7 +121,7 @@ const gridHTML = function() {
                                         </tr>
                                         <tr>
                                             <td valign="top" class="luckysheet-paneswrapper"> 
-                                                <div class="luckysheet-rows-h" id="luckysheet-rows-h"> 
+                                                <div class="luckysheet-rows-h" id="luckysheet-rows-h" style="overflow-anchor: none;">
                                                     <div class="luckysheet-rows-change-size" id="luckysheet-rows-change-size"></div> 
                                                     <div class="luckysheet-rows-h-hover" id="luckysheet-rows-h-hover"></div> 
                                                     <div id="luckysheet-rows-h-selected"></div>  
@@ -132,7 +139,7 @@ const gridHTML = function() {
                                                 <div class="luckysheet-cell-freezen"></div> 
                                                 <div class="luckysheet-scrollbars luckysheet-scrollbar-ltr luckysheet-scrollbar-x" id="luckysheet-scrollbar-x"><div></div></div> 
                                                 <div class="luckysheet-scrollbars luckysheet-scrollbar-ltr luckysheet-scrollbar-y" id="luckysheet-scrollbar-y"><div></div></div> 
-                                                <div class="luckysheet-cell-main " id="luckysheet-cell-main">
+                                                <div class="luckysheet-cell-main " id="luckysheet-cell-main" style="overflow-anchor: none;">
                                                     <div id="luckysheet-formula-functionrange"></div>  
                                                     <div id="luckysheet-formula-functionrange-select" class="luckysheet-selection-copy luckysheet-formula-functionrange-select">
                                                         <div class="luckysheet-selection-copy-top luckysheet-copy"></div>
