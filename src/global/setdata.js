@@ -19,14 +19,15 @@ function hasExplicitNumberFormat(cell) {
 
 // A comma amount written into a cell that already has a number mask: genarate()
 // infers "#,##0" plus as many decimals as were typed, and adopting that wholesale
-// threw the mask's own decimals away. "8,163,100" (an amount saved as text) under
-// "0.00" became "#,##0" on load, and from then on typing "8163100.00" could not
-// bring the cents back, because a typed number keeps the cell's mask (invoice
-// b92ed772, I49). So keep the mask and only add the separator the user typed:
-// "0.00" → "#,##0.00", every section, so "0.00;[Red](0.00)" keeps its colour —
-// the same rule as the app's repairMoneyTextCells(). Returns null when the mask
-// is not a plain number mask, or when keeping it would hide decimals the user
-// typed ("1,234.567" under "0.00"); the inferred format wins then, as before.
+// let whatever was typed decide the decimals. "8,163,100" (an amount saved as
+// text) under "0.00" became "#,##0" on load (invoice b92ed772, I49), and a typed
+// "5.00" could just as well turn a 0dp cell into 2dp. The template's mask decides
+// how many decimals a cell shows — 0, 1 or 2 — and typing never changes that;
+// only the toolbar does. So keep the mask and add just the separator the user
+// typed: "0.00" → "#,##0.00", "0" → "#,##0", every section, so "0.00;[Red](0.00)"
+// keeps its colour — the same rule as the app's repairMoneyTextCells(). The value
+// itself keeps every typed digit. Returns null when the mask is not a plain number
+// mask; the inferred format wins then, as before.
 function maskWithThousandsSeparator(fa, inferred) {
     if (inferred == null || inferred.t !== "n" || !/^#,##0(\.0+)?$/.test(inferred.fa)) {
         return null;
@@ -36,44 +37,7 @@ function maskWithThousandsSeparator(fa, inferred) {
     }
 
     const kept = fa.indexOf(",") > -1 ? fa : fa.replace(/[#0]*0(?=\.0)|^[#0]*0$/g, "#,##0");
-    if (kept.indexOf(",") === -1 || decimalsOf(kept) < decimalsOf(inferred.fa)) {
-        return null;
-    }
-    return kept;
-}
-
-function decimalsOf(fa) {
-    const decimals = fa.split(";")[0].match(/\.(0+)/);
-    return decimals ? decimals[1].length : 0;
-}
-
-// A plain number typed with more decimals than the cell's mask shows: the mask
-// won, so "8163100.00" typed into "#,##0" came back as "8,163,100" — the ".00"
-// the user had just typed vanished, and retyping it changed nothing (invoice
-// b92ed772, I49). Excel keeps the mask there too, but on an invoice a typed
-// ".00" is an instruction. Widen every section to the typed decimals, never
-// narrow: "#,##0" → "#,##0.00", "#,##0;[Red](#,##0)" → "#,##0.00;[Red](#,##0.00)".
-// Only for what a user types in the editor — formula.updatecell() calls this,
-// setCellValue() and the load path do not — and only for a plain number mask.
-// A comma amount like "8,163,100.00" is not a plain number; genarate() and
-// maskWithThousandsSeparator() handle it in setcellvalue().
-function maskWidenedToTypedDecimals(fa, typed) {
-    const typedDecimals = /^-?\d+\.(\d+)$/.exec(String(typed).trim());
-    if (fa == null || typedDecimals == null || !isPlainNumberMask(fa)) {
-        return null;
-    }
-
-    const want = Math.min(typedDecimals[1].length, 9);
-    if (want <= decimalsOf(fa)) {
-        return null;
-    }
-    const zeros = new Array(want + 1).join("0");
-    return fa.replace(/([#0,]*0)(\.0+)?/g, (match, integer) => integer + "." + zeros);
-}
-
-function isPlainNumberMask(fa) {
-    const bare = fa.replace(/\[[^\]]*\]/g, "");
-    return /0/.test(bare) && !/[%"@?\/Ee]/.test(bare) && !is_date(fa);
+    return kept.indexOf(",") > -1 ? kept : null;
 }
 
 //Set cell value
@@ -358,4 +322,4 @@ function setAccuracy(autoFormatw, accuracy) {
     return fmt.toString();
 }
 
-export { setcellvalue, setAccuracy, maskWidenedToTypedDecimals };
+export { setcellvalue, setAccuracy };

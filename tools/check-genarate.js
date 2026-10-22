@@ -10,12 +10,12 @@
 // (from m) but held a value without them, and that value is what gets saved
 // and printed.
 //
-// setcellvalue() then decides whether a cell keeps its own mask. A comma
-// amount under "0.00" used to take the inferred "#,##0" and lose its decimals
-// for good (invoice b92ed772, I49) — and once a cell was "#,##0", typing
-// "8163100.00" into it could not bring them back. The editor now widens the
-// mask to the typed decimals (maskWidenedToTypedDecimals(), also in setdata.js,
-// called from formula.updatecell(), which is too DOM-bound to bundle here).
+// setcellvalue() then decides whether a cell keeps its own mask. It always
+// does: the template's mask says how many decimals a cell shows — 0, 1 or 2 —
+// and nothing typed changes that. A comma amount under "0.00" used to take the
+// inferred "#,##0" and lose its decimals for good (invoice b92ed772, I49); a
+// typed "0.00" once turned a 0dp cell into 2dp for good (1.0.29, Elaine's
+// "EXCEL_WS_OVERAGE test dp elaine" on QA).
 
 const fs = require("fs");
 const os = require("os");
@@ -70,9 +70,10 @@ const writes = [
     12000,
     "12,000.00",
   ],
-  // Never hide decimals the user typed: the inferred format wins, as before.
-  ["0.00", "1,234.567", "#,##0.000", 1234.567, "1,234.567"],
-  ["#,##0", "8,163,100.00", "#,##0.00", 8163100, "8,163,100.00"],
+  // The mask decides the decimals even when more were typed; the value keeps them.
+  ["0.00", "1,234.567", "#,##0.00", 1234.567, "1,234.57"],
+  ["#,##0", "8,163,100.00", "#,##0", 8163100, "8,163,100"],
+  ["0.0", "8,163,100.00", "#,##0.0", 8163100, "8,163,100.0"],
   // Unchanged: a plain number typed into a masked cell keeps the mask.
   ["#,##0", "8163100.00", "#,##0", 8163100, "8,163,100"],
   ["0.00", "8163100.00", "0.00", 8163100, "8163100.00"],
@@ -84,28 +85,21 @@ const writes = [
   ["0.00", "75%", "0%", 0.75, "75%"],
 ];
 
-// [cell's mask, what the user typed in the editor, mask after]. null means
-// the mask stays as it is. maskWidenedToTypedDecimals() is what
-// formula.updatecell() applies before it hands the typed value on.
-const widenings = [
-  ["#,##0", "8163100.00", "#,##0.00"],
-  ["#,##0", "15812.91", "#,##0.00"],
-  ["0", "8163100.5", "0.0"],
-  ["#,##0;[Red](#,##0)", "-1.25", "#,##0.00;[Red](#,##0.00)"],
-  ["#,##0.00_);(#,##0.00)", "1.125", "#,##0.000_);(#,##0.000)"],
-  // Never narrow, and nothing to do when the mask already shows enough.
-  ["0.00", "8163100.00", null],
-  ["0.00", "8163100", null],
-  ["#,##0.00", "8163100.5", null],
-  // Not a plain number: setcellvalue() and genarate() handle these.
-  ["#,##0", "8,163,100.00", null],
-  ["#,##0", "{freight_amount}", null],
-  // Not a plain number mask.
-  ["General", "1.50", null],
-  ["0%", "0.50", null],
-  ["yyyy-MM-dd", "1.50", null],
-  ["0.00E+00", "1.234", null],
-  ["@", "1.50", null],
+// [template mask, what the user typed, v after, m after] for a cell already
+// holding a number — what Edit Invoice opens. The mask after is always the
+// template's own (plus a separator when one was typed, see `writes`): 2dp shows
+// 2dp, 1dp shows 1dp, 0dp shows 0dp, whatever was typed.
+const typedValues = [
+  ["0.00", "5", 5, "5.00"],
+  ["0.00", "5.5", 5.5, "5.50"],
+  ["0.00", "5.123", 5.123, "5.12"],
+  ["#,##0.00", "1234.5", 1234.5, "1,234.50"],
+  ["0.0", "5", 5, "5.0"],
+  ["0.0", "5.24", 5.24, "5.2"],
+  ["0.0", "5.00", 5, "5.0"],
+  ["0", "5.24", 5.24, "5"],
+  ["0", "0.00", 0, "0"],
+  ["#,##0", "8163100.00", 8163100, "8,163,100"],
 ];
 
 // format.js imports getdata.js only for valueShowEs(), and getdata.js drags in
@@ -149,7 +143,7 @@ function check(label, fn) {
 }
 
 function run() {
-  const { genarate, setcellvalue, maskWidenedToTypedDecimals } = require(out);
+  const { genarate, setcellvalue } = require(out);
 
   for (const [typed, v, fa] of amounts) {
     check("genarate " + JSON.stringify(typed), () => {
@@ -184,28 +178,17 @@ function run() {
     });
   }
 
-  for (const [fa, typed, widened] of widenings) {
-    const label = JSON.stringify(typed) + " typed into " + JSON.stringify(fa);
-    check("maskWidenedToTypedDecimals " + label, () => {
-      assert.strictEqual(maskWidenedToTypedDecimals(fa, typed), widened);
+  for (const [fa, input, v, m] of typedValues) {
+    const label = JSON.stringify(input) + " typed into " + JSON.stringify(fa);
+    check("setcellvalue " + label, () => {
+      const d = [[{ ct: { fa, t: "n" }, v: 0, m: "0" }]];
+      const after = setcellvalue(0, 0, d, input);
+      assert.deepStrictEqual(
+        { fa: after.ct.fa, v: after.v, m: String(after.m) },
+        { fa, v, m }
+      );
     });
   }
-
-  // I49 on invoice b92ed772 as saved: a number under "#,##0". The editor commit
-  // is updatecell() widening the mask, then setcellvalue() with that cell.
-  check('editor commit "8163100.00" into I49 (8163100 under "#,##0")', () => {
-    const typed = "8163100.00";
-    const cell = { ct: { fa: "#,##0", t: "n" }, v: 8163100, m: "8,163,100" };
-    const d = [[cell]];
-    const curv = JSON.parse(JSON.stringify(cell));
-    curv.v = typed;
-    curv.ct = { fa: maskWidenedToTypedDecimals(cell.ct.fa, typed), t: "n" };
-    const after = setcellvalue(0, 0, d, curv);
-    assert.deepStrictEqual(
-      { fa: after.ct.fa, v: after.v, m: String(after.m) },
-      { fa: "#,##0.00", v: 8163100, m: "8,163,100.00" }
-    );
-  });
 
   if (failed) {
     console.log("\n" + failed + " failed");
@@ -219,7 +202,7 @@ require("esbuild")
     stdin: {
       contents:
         "export { genarate } from './src/global/format.js'\n" +
-        "export { setcellvalue, maskWidenedToTypedDecimals } from './src/global/setdata.js'",
+        "export { setcellvalue } from './src/global/setdata.js'",
       resolveDir: root,
     },
     bundle: true,
